@@ -202,6 +202,23 @@ project(':core') {
     jacocoTestCoverageVerification.enabled = false
 }
 
+project(':e2e') {
+    bootJar {
+        enabled = false
+    }
+
+    jar {
+        enabled = false
+    }
+
+    tasks.withType(Test) {
+        jacoco.enabled = false
+    }
+
+    jacocoTestReport.enabled = false
+    jacocoTestCoverageVerification.enabled = false
+}
+
 project(':api-server') {
     dependencies {
         implementation project(':core')
@@ -212,4 +229,7 @@ project(':queue-server') {
     dependencies {
         implementation project(':core')
     }
+}
+
+project(':e2e') {
 }
