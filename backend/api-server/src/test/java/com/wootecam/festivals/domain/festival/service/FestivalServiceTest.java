@@ -388,8 +388,8 @@ class FestivalServiceTest extends SpringBootTestConfig {
                     () -> assertThat(response.content()).hasSize(5),
                     () -> assertThat(response.cursor()).isNull(),
                     () -> assertThat(response.hasNext()).isFalse(),
-                    () -> assertThat(response.content().get(0).festivalId()).isEqualTo(festivals.get(0).getId()),
-                    () -> assertThat(response.content().get(4).festivalId()).isEqualTo(festivals.get(4).getId())
+                    () -> assertThat(response.content().get(0).festivalId()).isEqualTo(festivals.get(4).getId()),
+                    () -> assertThat(response.content().get(4).festivalId()).isEqualTo(festivals.get(0).getId())
             );
         }
 
