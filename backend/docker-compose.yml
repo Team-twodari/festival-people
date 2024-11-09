@@ -12,14 +12,7 @@ services:
       - redis
       - mysql
     environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/twodari
-      - SPRING_DATA_REDIS_HOST=redis
-      - CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
-      - CLOUD_AWS_CREDENTIALS_SECRET_KEY=${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
-      - CLOUD_AWS_REGION_STATIC=${CLOUD_AWS_REGION_STATIC}
-      - CLOUD_AWS_STACK_AUTO=${CLOUD_AWS_STACK_AUTO}
-      - CLOUD_AWS_S3_BUCKET=${CLOUD_AWS_S3_BUCKET}
+      - SPRING_PROFILES_ACTIVE=docker
 
   queue-server:
     build:
@@ -30,7 +23,7 @@ services:
     depends_on:
       - redis
     environment:
-      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_PROFILES_ACTIVE=docker
 
   redis:
     image: "redis:latest"

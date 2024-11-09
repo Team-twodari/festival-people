@@ -1,14 +1,65 @@
 spring:
   profiles:
     active: local
-    include: secret
   session:
     store-type: redis
+
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50 # 최대 커넥션 수 커스텀하게 사용
+      minimum-idle: 50 # 최소 idle 커넥션 수 커스텀하게 사용
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: none
+    #    show-sql: true
+    properties:
+      hibernate:
+        #        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  #        generate_statistics: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+
+  task:
+    execution:
+      pool:
+        core-size: 75   # 기본 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
+        max-size: 200   # 최대 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
+        queue-capacity: 10000 # 큐의 최대 용량
+
+logging:
+  level:
+    org.hibernate.SQL: off
+    com.wootecam.festivals: warn
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
 
 server:
   port: 8080
+  tomcat:
+    threads:
+      min-spare: 75 # 최소 톰캣 스레드 수 커스텀하게 사용 (CPU 점유율 확인)
+      max: 75 # 최대 톰캣 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
+      max-queue-capacity: 10000
+
+cloud:
+  aws:
+    region: ${CLOUD_AWS_REGION_STATIC}
+    credentials:
+      accessKey: ${CLOUD_AWS_CREDENTIALS_ACCESS-KEY}
+      secretKey: ${CLOUD_AWS_CREDENTIALS_SECRET-KEY}
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+  stack:
+    auto: ${CLOUD_AWS_STACK_AUTO}
 
 # actuator, prometheus 설정
 management:
@@ -30,56 +81,22 @@ spring:
   config:
     activate:
       on-profile: local
+
   datasource:
     url: jdbc:mysql://localhost:3306/twodari?useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 50 # 최대 커넥션 수 커스텀하게 사용
-      minimum-idle: 50 # 최소 idle 커넥션 수 커스텀하게 사용
-  jpa:
-    hibernate:
-      ddl-auto: none
-#    show-sql: true
-    properties:
-      hibernate:
-#        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-  #        generate_statistics: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ""
-  task:
-    execution:
-      pool:
-        core-size: 75   # 기본 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-        max-size: 200   # 최대 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-        queue-capacity: 10000 # 큐의 최대 용량
-logging:
-  level:
-    org.hibernate.SQL: off
-    com.wootecam.festivals: warn
-    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
-server:
-  tomcat:
-    threads:
-      min-spare: 75 # 최소 톰캣 스레드 수 커스텀하게 사용 (CPU 점유율 확인)
-      max: 75 # 최대 톰캣 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-      max-queue-capacity: 10000
 
 cloud:
   aws:
-    region: ${CLOUD_AWS_REGION_STATIC}
+    region: ap-northeast-2
     credentials:
-      accessKey: ${CLOUD_AWS_CREDENTIALS_ACCESS-KEY}
-      secretKey: ${CLOUD_AWS_CREDENTIALS_SECRET-KEY}
+      accessKey: access-key
+      secretKey: secret-key
     s3:
-      bucket: ${CLOUD_AWS_S3_BUCKET}
+      bucket: twodari
   stack:
-    auto: ${CLOUD_AWS_STACK_AUTO}
+    auto: true
 ---
 spring:
   config:
@@ -123,11 +140,18 @@ spring:
   config:
     activate:
       on-profile: docker
+
   datasource:
     url: jdbc:mysql://mysql:3306/twodari?useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ""
+
   jpa:
     hibernate:
       ddl-auto: create
@@ -137,8 +161,18 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         generate_statistics: true
+
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type: trace
     com.wootecam.festivals: debug
+
+cloud:
+  aws:
+    region: ap-northeast-2
+    credentials:
+      accessKey: access-key
+      secretKey: secret-key
+    s3:
+      bucket: twodari
+  stack:
+    auto: true
