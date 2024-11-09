@@ -69,6 +69,17 @@ server:
       min-spare: 75 # 최소 톰캣 스레드 수 커스텀하게 사용 (CPU 점유율 확인)
       max: 75 # 최대 톰캣 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
       max-queue-capacity: 10000
+
+cloud:
+  aws:
+    region: ${CLOUD_AWS_REGION_STATIC}
+    credentials:
+      accessKey: ${CLOUD_AWS_CREDENTIALS_ACCESS-KEY}
+      secretKey: ${CLOUD_AWS_CREDENTIALS_SECRET-KEY}
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+  stack:
+    auto: ${CLOUD_AWS_STACK_AUTO}
 ---
 spring:
   config:
