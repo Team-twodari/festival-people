@@ -10,6 +10,7 @@ import com.wootecam.festivals.domain.festival.stub.FestivalStub;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
+import com.wootecam.festivals.global.utils.DateTimeUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -40,9 +41,9 @@ class TicketTest {
                 () -> assertEquals("티켓 상세", ticket.getDetail()),
                 () -> assertEquals(10000L, ticket.getPrice()),
                 () -> assertEquals(100, ticket.getQuantity()),
-                () -> assertEquals(now, ticket.getStartSaleTime()),
-                () -> assertEquals(now.plusDays(1), ticket.getEndSaleTime()),
-                () -> assertEquals(now.plusDays(1), ticket.getRefundEndTime())
+                () -> assertEquals(DateTimeUtils.normalizeDateTime(now), ticket.getStartSaleTime()),
+                () -> assertEquals(DateTimeUtils.normalizeDateTime(now.plusDays(1)), ticket.getEndSaleTime()),
+                () -> assertEquals(DateTimeUtils.normalizeDateTime(now.plusDays(1)), ticket.getRefundEndTime())
         );
     }
 
