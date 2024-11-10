@@ -3,6 +3,7 @@ package com.wootecam.festivals.domain.festival.entity;
 import com.wootecam.festivals.domain.festival.util.FestivalValidator;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.global.audit.BaseEntity;
+import com.wootecam.festivals.global.utils.DateTimeUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -73,8 +74,8 @@ public class Festival extends BaseEntity {
         this.title = title;
         this.description = description;
         this.festivalImg = festivalImg;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.startTime = DateTimeUtils.normalizeDateTime(startTime);
+        this.endTime = DateTimeUtils.normalizeDateTime(endTime);
         this.festivalPublicationStatus =
                 festivalPublicationStatus == null ? FestivalPublicationStatus.PUBLISHED : festivalPublicationStatus;
         this.festivalProgressStatus =
