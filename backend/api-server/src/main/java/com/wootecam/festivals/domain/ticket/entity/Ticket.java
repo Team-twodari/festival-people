@@ -7,6 +7,7 @@ import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.global.audit.BaseEntity;
+import com.wootecam.festivals.global.utils.DateTimeUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -74,9 +75,9 @@ public class Ticket extends BaseEntity {
         this.detail = detail;
         this.price = price;
         this.quantity = quantity;
-        this.startSaleTime = startSaleTime;
-        this.endSaleTime = endSaleTime;
-        this.refundEndTime = refundEndTime;
+        this.startSaleTime = DateTimeUtils.normalizeDateTime(startSaleTime);
+        this.endSaleTime = DateTimeUtils.normalizeDateTime(endSaleTime);
+        this.refundEndTime = DateTimeUtils.normalizeDateTime(refundEndTime);
         this.isDeleted = false;
     }
 
@@ -102,7 +103,7 @@ public class Ticket extends BaseEntity {
     }
 
     public boolean isSaleOnTime(LocalDateTime now) {
-        return (startSaleTime.isEqual(now) || startSaleTime.isBefore(now)) && ((endSaleTime.isEqual(now)
-                || endSaleTime.isAfter(now)));
+        return (startSaleTime.isEqual(now) || startSaleTime.isBefore(now)) && (endSaleTime.isEqual(now)
+                || endSaleTime.isAfter(now));
     }
 }
