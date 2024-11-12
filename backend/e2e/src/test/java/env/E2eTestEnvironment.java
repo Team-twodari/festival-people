@@ -12,9 +12,12 @@ import java.sql.Statement;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.DockerImageName;
@@ -68,11 +71,14 @@ public abstract class E2eTestEnvironment {
             .waitingFor(Wait.forListeningPort());
 
     // API 서버 컨테이너 설정
+    private static final Logger logger = LoggerFactory.getLogger(E2eTestEnvironment.class);
+
     private static GenericContainer<?> apiServerContainer = new GenericContainer<>(
             new ImageFromDockerfile().withDockerfile(Paths.get("../api-server/Dockerfile")))
             .withExposedPorts(8080)
             .withEnv("SPRING_PROFILES_ACTIVE", "docker")
             .withNetwork(network)
+            .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
 
     // Queue 서버 컨테이너 설정
@@ -81,6 +87,7 @@ public abstract class E2eTestEnvironment {
             .withEnv("SPRING_PROFILES_ACTIVE", "docker")
             .withExposedPorts(8081)
             .withNetwork(network)
+            .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
 
     protected static String API_SERVER_URL;
