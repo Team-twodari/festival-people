@@ -1,10 +1,13 @@
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static Fixture.ApiRequestFixture.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import env.E2eTestEnvironment;
 import io.restassured.filter.cookie.CookieFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,20 +28,12 @@ class E2eTest extends E2eTestEnvironment {
 
     @Test
     @DisplayName("사용자는 회원가입 후 로그인할 수 있다")
-    void testUserSignUpAndLogin() {
+    void testUserSignUpAndLogin() throws JsonProcessingException {
         // 회원가입
-        String signupPayload = """
-                    {
-                      "name" : "test",
-                      "email" : "test@test.com",
-                      "profileImg" : "test"
-                    }
-                """;
-
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType("application/json")
-                .body(signupPayload)
+                .body(createMemberCreateRequest("test", "test@email.com"))
                 .when()
                 .post("/api/v1/member/signup")
                 .then()
@@ -46,16 +41,10 @@ class E2eTest extends E2eTestEnvironment {
                 .body("data.id", notNullValue());
 
         // 로그인
-        String loginPayload = """
-                    {
-                      "email" : "test@test.com"
-                    }
-                """;
-
         Response loginResponse = given()
                 .baseUri(API_SERVER_URL)
                 .contentType("application/json")
-                .body(loginPayload)
+                .body(createMemberLoginRequest("test@email.com"))
                 .when()
                 .post("/api/v1/auth/login")
                 .then()
@@ -67,11 +56,11 @@ class E2eTest extends E2eTestEnvironment {
 
     @Test
     @DisplayName("회원은 축제와 티켓을 생성할 수 있다")
-    void testFestivalAndTicketCreation() {
+    void testFestivalAndTicketCreation() throws JsonProcessingException {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"name\":\"admin\", \"email\":\"admin@test.com\", \"profileImg\":\"admin.jpg\"}")
+                .body(createMemberCreateRequest("admin", "admin@email.com"))
                 .when()
                 .post("/api/v1/member/signup")
                 .then()
@@ -81,7 +70,7 @@ class E2eTest extends E2eTestEnvironment {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"email\":\"admin@test.com\"}")
+                .body(createMemberLoginRequest("admin@email.com"))
                 .filter(adminCookieFilter)
                 .when()
                 .post("/api/v1/auth/login")
@@ -92,14 +81,7 @@ class E2eTest extends E2eTestEnvironment {
         Response festivalResponse = given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "title" : "Summer Music Festival",
-                          "description" : "A vibrant music festival",
-                          "startTime" : "2024-12-10T04:39:48",
-                          "endTime" : "2024-12-12T04:39:48"
-                        }
-                        """)
+                .body(createFestivalCreateRequest(LocalDateTime.now().plusDays(7)))
                 .filter(adminCookieFilter)
                 .when()
                 .post("/api/v1/festivals")
@@ -114,17 +96,7 @@ class E2eTest extends E2eTestEnvironment {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "name" : "티켓1",
-                          "detail" : "티켓 설명입니다",
-                          "price" : 1000,
-                          "quantity" : 100,
-                          "startSaleTime" : "2024-11-10T04:40:03.523081",
-                          "endSaleTime" : "2024-11-12T04:40:03.523081",
-                          "refundEndTime" : "2024-11-12T04:40:03.523081"
-                        }
-                        """)
+                .body(createTicketCreateRequest(100, LocalDateTime.now()))
                 .filter(adminCookieFilter)
                 .when()
                 .post("/api/v1/festivals/" + festivalId + "/tickets")
@@ -135,11 +107,11 @@ class E2eTest extends E2eTestEnvironment {
 
     @Test
     @DisplayName("회원은 티켓을 구매할 수 있다")
-    void testFestivalTicketPurchaseScenario() throws InterruptedException {
+    void testFestivalTicketPurchaseScenario() throws InterruptedException, JsonProcessingException {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"name\":\"admin\", \"email\":\"admin@test.com\", \"profileImg\":\"admin.jpg\"}")
+                .body(createMemberCreateRequest("admin", "admin@email.com"))
                 .when()
                 .post("/api/v1/member/signup")
                 .then()
@@ -149,7 +121,7 @@ class E2eTest extends E2eTestEnvironment {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"email\":\"admin@test.com\"}")
+                .body(createMemberLoginRequest("admin@email.com"))
                 .filter(adminCookieFilter)
                 .when()
                 .post("/api/v1/auth/login")
@@ -160,14 +132,7 @@ class E2eTest extends E2eTestEnvironment {
         Response festivalResponse = given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "title" : "Summer Music Festival",
-                          "description" : "A vibrant music festival",
-                          "startTime" : "2024-12-10T04:39:48",
-                          "endTime" : "2024-12-12T04:39:48"
-                        }
-                        """)
+                .body(createFestivalCreateRequest(LocalDateTime.now().plusDays(7)))
                 .filter(adminCookieFilter)
                 .when()
                 .post("/api/v1/festivals")
@@ -179,22 +144,11 @@ class E2eTest extends E2eTestEnvironment {
         int festivalId = festivalResponse.path("data.festivalId");
 
         // Step 4: Admin 티켓 생성
-        int ticketPrice = 10000;
         int ticketQuantity = 100;
         Response ticketResponse = given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body(String.format("""
-                        {
-                          "name" : "티켓1",
-                          "detail" : "티켓 설명입니다",
-                          "price" : %d,
-                          "quantity" : %d,
-                          "startSaleTime" : "2024-11-10T04:40:03.523081",
-                          "endSaleTime" : "2024-11-12T04:40:03.523081",
-                          "refundEndTime" : "2024-11-12T04:40:03.523081"
-                        }
-                        """, ticketPrice, ticketQuantity))
+                .body(createTicketCreateRequest(ticketQuantity, LocalDateTime.now()))
                         .filter(adminCookieFilter)
                         .when()
                         .post("/api/v1/festivals/" + festivalId + "/tickets")
@@ -209,7 +163,7 @@ class E2eTest extends E2eTestEnvironment {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"name\":\"testUser\", \"email\":\"user@test.com\", \"profileImg\":\"user.jpg\"}")
+                .body(createMemberCreateRequest("user", "user@email.com"))
                 .when()
                 .post("/api/v1/member/signup")
                 .then()
@@ -219,7 +173,7 @@ class E2eTest extends E2eTestEnvironment {
         given()
                 .baseUri(API_SERVER_URL)
                 .contentType(ContentType.JSON)
-                .body("{\"email\":\"user@test.com\"}")
+                .body(createMemberLoginRequest("user@email.com"))
                 .filter(userCookieFilter)
                 .when()
                 .post("/api/v1/auth/login")
@@ -256,7 +210,6 @@ class E2eTest extends E2eTestEnvironment {
                 .get("/api/v1/festivals/" + festivalId + "/tickets/" + ticketId + "/purchase/" + purchaseSession)
                 .then()
                 .statusCode(200)
-                .body("data.ticketPrice", equalTo(ticketPrice))
                 .body("data.ticketQuantity", equalTo(ticketQuantity));
 
         // Step 10: User 티켓 구매

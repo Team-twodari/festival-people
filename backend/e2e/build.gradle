@@ -15,6 +15,9 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.18.0'
     testImplementation 'org.testcontainers:mysql:1.18.0'
 
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // Jackson의 Java 8 날짜/시간 모듈
+
     testImplementation project(":api-server")
+    testImplementation project(":queue-server")
 }
 
