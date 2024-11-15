@@ -1,0 +1,46 @@
+
+version: '3.8'
+
+services:
+  api-server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # Expose api-server on port 8080
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  queue-server:
+    build:
+      context: ./queue-server
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"  # Expose queue-server on port 8081
+    depends_on:
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"  # Default Redis port
+
+  mysql:
+    image: "mysql:8.0"
+    ports:
+      - "3306:3306"  # Default MySQL port
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: twodari
+      TZ: Asia/Seoul
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

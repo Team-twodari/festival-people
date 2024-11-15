@@ -1,11 +1,18 @@
 spring:
   profiles:
     active: local
-    include: secret
   session:
     store-type: redis
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
 server:
   port: 8081
+
 wait:
   queue:
     pass-chunk-size: 150
@@ -14,25 +21,29 @@ spring:
   config:
     activate:
       on-profile: local
+
   data:
     redis:
       host: localhost
       port: 6379
       password: ""
-logging:
-  level:
-    org.hibernate.SQL: debug
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
 
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ""
 ---
 spring:
   config:
     activate:
       on-profile: prod
-  data:
-    redis:
-      host: ${secret-redis.host}
-      port: ${secret-redis.port}
-      password: ${secret-redis.password}
+
 logging:
   level:
     org.hibernate.SQL: debug

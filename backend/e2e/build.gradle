@@ -1,0 +1,23 @@
+sourceSets {
+    test {
+        java {
+            srcDirs += 'src/test/java'
+        }
+    }
+}
+
+dependencies {
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation group: 'io.rest-assured', name: 'rest-assured', version: '5.4.0'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    testImplementation 'org.testcontainers:testcontainers:1.18.0'
+    testImplementation 'org.testcontainers:junit-jupiter:1.18.0'
+    testImplementation 'org.testcontainers:mysql:1.18.0'
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // Jackson의 Java 8 날짜/시간 모듈
+
+    testImplementation project(":api-server")
+    testImplementation project(":queue-server")
+}
+
