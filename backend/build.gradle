@@ -42,6 +42,9 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // Jackson의 Java 8 날짜/시간 모듈
 
+        runtimeOnly 'com.mysql:mysql-connector-j'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
         testCompileOnly 'org.projectlombok:lombok'
@@ -232,4 +235,10 @@ project(':queue-server') {
 }
 
 project(':e2e') {
+}
+
+project(':schedule-server') {
+    dependencies {
+        implementation project(':core')
+    }
 }
