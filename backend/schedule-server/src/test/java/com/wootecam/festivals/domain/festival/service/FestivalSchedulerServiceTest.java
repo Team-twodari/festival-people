@@ -5,12 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
-import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.member.entity.Member;
-import com.wootecam.festivals.domain.member.repository.MemberRepository;
+import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
+import com.wootecam.festivals.utils.MemberRepository;
 import com.wootecam.festivals.utils.SpringBootTestConfig;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -79,7 +80,7 @@ class FestivalSchedulerServiceTest extends SpringBootTestConfig {
          */
         taskScheduler.getScheduledThreadPoolExecutor().getQueue().forEach(runnable -> {
             runnable.run();
-            assertThat(festivalRepository.findById(festival.getId()).get().getFestivalProgressStatus()).isIn(
+            Assertions.assertThat(festivalRepository.findById(festival.getId()).get().getFestivalProgressStatus()).isIn(
                     FestivalProgressStatus.ONGOING, FestivalProgressStatus.COMPLETED);
         });
     }
@@ -122,13 +123,14 @@ class FestivalSchedulerServiceTest extends SpringBootTestConfig {
 
         // Then
         assertAll(
-                () -> assertThat(
-                        festivalRepository.findById(upcomingFestival.getId()).get().getFestivalProgressStatus())
+                () -> Assertions.assertThat(
+                                festivalRepository.findById(upcomingFestival.getId()).get().getFestivalProgressStatus())
                         .isEqualTo(FestivalProgressStatus.UPCOMING),
-                () -> assertThat(festivalRepository.findById(ongoingFestival.getId()).get().getFestivalProgressStatus())
+                () -> Assertions.assertThat(
+                                festivalRepository.findById(ongoingFestival.getId()).get().getFestivalProgressStatus())
                         .isEqualTo(FestivalProgressStatus.ONGOING),
-                () -> assertThat(
-                        festivalRepository.findById(completedFestival.getId()).get().getFestivalProgressStatus())
+                () -> Assertions.assertThat(
+                                festivalRepository.findById(completedFestival.getId()).get().getFestivalProgressStatus())
                         .isEqualTo(FestivalProgressStatus.COMPLETED),
                 () -> assertThat(taskScheduler.getScheduledThreadPoolExecutor().getQueue()).hasSize(3)
         );
@@ -154,7 +156,7 @@ class FestivalSchedulerServiceTest extends SpringBootTestConfig {
         festivalSchedulerService.scheduleStatusUpdate(festival);
 
         // Then
-        assertThat(festivalRepository.findById(festival.getId()).get().getFestivalProgressStatus())
+        Assertions.assertThat(festivalRepository.findById(festival.getId()).get().getFestivalProgressStatus())
                 .isEqualTo(FestivalProgressStatus.COMPLETED);
     }
 }

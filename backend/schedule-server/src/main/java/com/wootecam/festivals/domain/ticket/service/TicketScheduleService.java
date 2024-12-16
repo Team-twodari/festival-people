@@ -1,6 +1,6 @@
 package com.wootecam.festivals.domain.ticket.service;
 
-import com.wootecam.festivals.domain.ticket.dto.TicketResponse;
+import com.wootecam.festivals.domain.festival.dto.TicketResponse;
 import com.wootecam.festivals.domain.ticket.repository.CurrentTicketWaitRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketRepository;

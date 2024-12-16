@@ -60,17 +60,6 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                                                                              Long beforeId,
                                                                              Pageable pageable);
 
-    @Modifying
-    @Query("UPDATE Festival f SET f.festivalProgressStatus = 'COMPLETED' WHERE f.festivalProgressStatus != 'COMPLETED' AND f.endTime <= :now")
-    void bulkUpdateCOMPLETEDFestivals(LocalDateTime now);
-
-    @Modifying
-    @Query("UPDATE Festival f SET f.festivalProgressStatus = 'ONGOING' WHERE f.festivalProgressStatus = 'UPCOMING' AND f.startTime <= :now")
-    void bulkUpdateONGOINGFestivals(LocalDateTime now);
-
-    @Query("SELECT f FROM Festival f WHERE f.festivalProgressStatus != 'COMPLETED' AND f.isDeleted = false")
-    List<Festival> findFestivalsWithRestartScheduler();
-
 
     @Query(value = """
             SELECT DISTINCT new com.wootecam.festivals.domain.festival.dto.ParticipantResponse(

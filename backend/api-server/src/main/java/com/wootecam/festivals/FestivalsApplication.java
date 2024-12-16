@@ -9,7 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableConfigurationProperties(CloudConfiguration.class)
-@EnableScheduling
 @EnableAsync
 public class FestivalsApplication {
 

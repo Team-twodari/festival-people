@@ -1,14 +1,12 @@
 package com.wootecam.festivals.domain.festival.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
-import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.member.entity.Member;
-import com.wootecam.festivals.domain.member.repository.MemberRepository;
+import com.wootecam.festivals.utils.MemberRepository;
 import com.wootecam.festivals.utils.SpringBootTestConfig;
 import java.time.LocalDateTime;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +20,7 @@ class FestivalPublicationStatusUpdateServiceTest extends SpringBootTestConfig {
     private FestivalStatusUpdateService festivalStatusUpdateService;
 
     @Autowired
-    private FestivalRepository festivalRepository;
+    private com.wootecam.festivals.domain.festival.repository.FestivalRepository festivalRepository;
 
     @Autowired
     private MemberRepository memberRepository;
@@ -60,6 +58,7 @@ class FestivalPublicationStatusUpdateServiceTest extends SpringBootTestConfig {
 
         // Then
         festivalRepository.findById(savedFestival.getId())
-                .ifPresent(updatedFestival -> assertEquals(newStatus, updatedFestival.getFestivalProgressStatus()));
+                .ifPresent(updatedFestival -> Assertions.assertEquals(newStatus,
+                        updatedFestival.getFestivalProgressStatus()));
     }
 }

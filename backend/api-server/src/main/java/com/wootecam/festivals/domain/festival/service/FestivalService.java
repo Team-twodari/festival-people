@@ -36,7 +36,6 @@ public class FestivalService {
 
     private final FestivalRepository festivalRepository;
     private final MemberRepository memberRepository;
-    private final FestivalSchedulerService festivalSchedulerService;
 
     /**
      * 새로운 축제를 생성합니다.
@@ -54,8 +53,8 @@ public class FestivalService {
 
         Festival savedFestival = festivalRepository.save(festival);
 
-        //save하면서 cronTrigger등록해서 festival startTime endTime에 동적으로 상태를 변경하기 위한 코드
-        festivalSchedulerService.scheduleStatusUpdate(savedFestival);
+//        //save하면서 cronTrigger등록해서 festival startTime endTime에 동적으로 상태를 변경하기 위한 코드
+//        festivalSchedulerService.scheduleStatusUpdate(savedFestival);
 
         return new FestivalIdResponse(savedFestival.getId());
     }
