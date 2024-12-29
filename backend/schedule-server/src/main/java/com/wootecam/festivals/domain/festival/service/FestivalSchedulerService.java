@@ -2,17 +2,19 @@ package com.wootecam.festivals.domain.festival.service;
 
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
-import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
+import com.wootecam.festivals.global.exception.GlobalErrorCode;
+import com.wootecam.festivals.global.exception.type.ApiException;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 축제의 시작 시간과 종료 시간을 스케줄링하는 서비스입니다. 서버 재시작 시 모든 축제의 상태를 갱신하고 향후 상태 변경을 스케줄링합니다.
@@ -22,38 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class FestivalSchedulerService {
 
-    private final ThreadPoolTaskScheduler taskScheduler;
-    private final FestivalRepository festivalRepository;
-    private final FestivalStatusUpdateService festivalStatusUpdateService;
-
-    /**
-     * 서버 재시작 시 모든 축제의 상태를 갱신하고 향후 상태 변경을 스케줄링합니다. 이미 종료된 축제는 완료 상태로 변경하고, 진행 중인 축제는 진행 중 상태로 변경합니다. 아직 시작하지 않은 축제는 시작 및
-     * 종료 시간을 스케줄링합니다.
-     */
-    @EventListener(ContextRefreshedEvent.class)
-    @Transactional
-    public void scheduleAllFestivals() {
-        LocalDateTime now = LocalDateTime.now();
-
-        // 완료된 축제는 완료 상태로 벌크성 쿼리로 변경
-        festivalRepository.bulkUpdateCOMPLETEDFestivals(now);
-        // 진행 중인 축제는 진행 중 상태로 벌크성 쿼리로 변경
-        festivalRepository.bulkUpdateONGOINGFestivals(now);
-
-        List<Festival> festivals = festivalRepository.findFestivalsWithRestartScheduler();
-
-        log.debug("축제 스케줄링 시작. 총 {} 개의 축제가 대상입니다.", festivals.size());
-
-        for (Festival festival : festivals) {
-            if (festival.getStartTime().isAfter(now)) {
-                scheduleStatusUpdate(festival);
-            } else if (festival.getStartTime().isBefore(now) && festival.getEndTime().isAfter(now)) {
-                scheduleEndTimeUpdate(festival);
-            }
-        }
-
-        log.debug("축제 스케줄링 완료.");
-    }
+    private final Scheduler scheduler;
 
     /**
      * 축제의 시작 시간과 종료 시간을 스케줄링합니다. FestivalService에서 축제를 생성할 때 호출됩니다.
@@ -65,6 +36,7 @@ public class FestivalSchedulerService {
         log.debug("현재 시간 : {}", LocalDateTime.now());
         log.debug("시작 시간 : {}", festival.getStartTime());
         log.debug("종료 시간 : {}", festival.getEndTime());
+
         scheduleStartTimeUpdate(festival);
         scheduleEndTimeUpdate(festival);
     }
@@ -75,38 +47,57 @@ public class FestivalSchedulerService {
      * @param festival
      */
     private void scheduleStartTimeUpdate(Festival festival) {
-        scheduleStatusChange(festival, FestivalProgressStatus.ONGOING, festival.getStartTime(), "시작");
+        scheduleStatusChange(festival.getId(), FestivalProgressStatus.ONGOING, festival.getStartTime(), "시작");
     }
 
+    /**
+     * 축제의 종료 시간을 스케줄링합니다.
+     *
+     * @param festival
+     */
     private void scheduleEndTimeUpdate(Festival festival) {
-        scheduleStatusChange(festival, FestivalProgressStatus.COMPLETED, festival.getEndTime(), "종료");
+        scheduleStatusChange(festival.getId(), FestivalProgressStatus.COMPLETED, festival.getEndTime(), "종료");
     }
 
-    private void scheduleStatusChange(Festival festival, FestivalProgressStatus status, LocalDateTime scheduledTime,
-                                      String eventType) {
-        LocalDateTime now = LocalDateTime.now();
-        if (scheduledTime.isBefore(now)) {
-            // 이미 지난 시간의 경우 즉시 실행
-            festivalStatusUpdateService.updateFestivalStatus(festival.getId(), status);
-            log.info("축제 ID: {}의 {} 스케줄링되어 상태가 {}로 즉시 변경되었습니다.", festival.getId(), eventType, status);
-        } else {
-            // 미래의 시간에 대해 스케줄링
-            String cronExpression = createCronExpression(scheduledTime);
-            taskScheduler.schedule(
-                    () -> {
-                        festivalStatusUpdateService.updateFestivalStatus(festival.getId(), status);
-                        log.info("축제 ID: {}의 {} 스케줄링되어 상태가 {}로 변경되었습니다.", festival.getId(), eventType, status);
-                    },
-                    new CronTrigger(cronExpression)
-            );
-            log.debug("축제 ID: {}의 {} 시간이 {}으로 스케줄링되었습니다.", festival.getId(), eventType, cronExpression);
-            log.debug("현재 등록된 스케줄러 개수: {}", taskScheduler.getScheduledThreadPoolExecutor().getQueue().size());
+    /**
+     * 축제의 상태 변경을 스케줄링합니다.
+     *
+     * @param festivalId  축제 ID
+     * @param status      변경할 상태
+     * @param triggerTime 트리거 시간
+     * @param eventType   이벤트 타입
+     */
+    public void scheduleStatusChange(Long festivalId, FestivalProgressStatus status, LocalDateTime triggerTime,
+                                     String eventType) {
+        try {
+            String jobKey = "festivalJob_" + festivalId + "_" + eventType;
+            String triggerKey = "festivalTrigger_" + festivalId + "_" + eventType;
+
+            JobDetail jobDetail = JobBuilder.newJob(FestivalScheduleJob.class)
+                    .withIdentity(jobKey, "festivalGroup")
+                    .usingJobData("festivalId", festivalId)
+                    .usingJobData("festivalStatus", status.name())
+                    .storeDurably(false)
+                    .build();
+
+            int priority = eventType.equals("시작") ? 10 : 5;
+
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey, "festivalGroup")
+                    .startAt(java.sql.Timestamp.valueOf(triggerTime))
+                    .withPriority(priority)
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
+                    .build();
+
+            if (scheduler.checkExists(jobDetail.getKey())) {
+                log.debug("이미 등록된 작업 - 축제 ID: {}, 이벤트 타입: {}", festivalId, eventType);
+            } else {
+                scheduler.scheduleJob(jobDetail, trigger);
+                log.debug("축제 ID: {}의 {} 스케줄링 완료 (트리거 시간: {}).", festivalId, eventType, triggerTime);
+            }
+        } catch (SchedulerException e) {
+            log.error("스케줄링 중 오류 발생. 축제 ID: {}, 이벤트 타입: {}", festivalId, eventType, e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, e);
         }
-    }
-
-    private String createCronExpression(LocalDateTime dateTime) {
-        return String.format("%d %d %d %d %d ?",
-                dateTime.getSecond(), dateTime.getMinute(), dateTime.getHour(),
-                dateTime.getDayOfMonth(), dateTime.getMonthValue());
     }
 }
