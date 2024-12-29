@@ -16,25 +16,45 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
-    #    show-sql: true
     properties:
       hibernate:
-        #        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-  #        generate_statistics: true
+        default_schema: twodari
+  quartz:
+    jdbc:
+      initialize-schema: never # Quartz 스키마를 초기화하지 않도록 설정
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            useProperties: false
+            misfireThreshold: 60000
+            isClustered: true
+            tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
+            clusterCheckinInterval: 20000
+            dataSource: schedule
+          scheduler.instanceId: AUTO
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 25
+            threadPriority: 5
 
   data:
     redis:
       host: localhost
       port: 6379
       password: ""
-
-  task:
-    execution:
-      pool:
-        core-size: 75   # 기본 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-        max-size: 200   # 최대 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-        queue-capacity: 10000 # 큐의 최대 용량
+  org:
+    quartz:
+      datasource:
+        schedule:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: ${QUARTZ_DATASOURCE_URL}
+          username: ${QUARTZ_DATASOURCE_USERNAME}
+          password: ${QUARTZ_DATASOURCE_PASSWORD}
 
 logging:
   level:
@@ -42,40 +62,16 @@ logging:
     com.wootecam.festivals: warn
     org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
 
-server:
-  port: 8080
-  tomcat:
-    threads:
-      min-spare: 75 # 최소 톰캣 스레드 수 커스텀하게 사용 (CPU 점유율 확인)
-      max: 75 # 최대 톰캣 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-      max-queue-capacity: 10000
-
-cloud:
-  aws:
-    region: ${CLOUD_AWS_REGION_STATIC}
-    credentials:
-      accessKey: ${CLOUD_AWS_CREDENTIALS_ACCESS-KEY}
-      secretKey: ${CLOUD_AWS_CREDENTIALS_SECRET-KEY}
-    s3:
-      bucket: ${CLOUD_AWS_S3_BUCKET}
-  stack:
-    auto: ${CLOUD_AWS_STACK_AUTO}
-
-# actuator, prometheus 설정
 management:
   endpoints:
     web:
       exposure:
         include: "*"
-  endpoint:
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
   prometheus:
     metrics:
       export:
         enabled: true
+
 ---
 spring:
   config:
@@ -87,6 +83,15 @@ spring:
     username: root
     password:
 
+  org:
+    quartz:
+      datasource:
+        schedule:
+          driver-class-name:
+          url: jdbc:mysql://localhost:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true
+          username: root
+          password:
+
 cloud:
   aws:
     region: ap-northeast-2
@@ -97,28 +102,29 @@ cloud:
       bucket: twodari
   stack:
     auto: true
+
 ---
 spring:
   config:
     activate:
       on-profile: prod
+
   datasource:
     url: ${secret-datasource.url}
     username: ${secret-datasource.username}
     password: ${secret-datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 20 # 최대 커넥션 수 커스텀하게 사용
-      minimum-idle: 20 # 최소 idle 커넥션 수 커스텀하게 사용
+      maximum-pool-size: 20
+      minimum-idle: 20
   jpa:
     hibernate:
       ddl-auto: none
-    #    show-sql: true
     properties:
       hibernate:
-        #        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         generate_statistics: true
+
   data:
     redis:
       host: ${secret-redis.host}
@@ -127,14 +133,16 @@ spring:
     task:
       execution:
         pool:
-          core-size: 15   # 기본 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-          max-size: 50   # 최대 스프링 비동기 스레드 풀 크기 커스텀하게 사용 (CPU 점유율 확인)
-          queue-capacity: 2000 # 큐의 최대 용량
+          core-size: 15
+          max-size: 50
+          queue-capacity: 2000
+
 logging:
   level:
     org.hibernate.SQL: off
     com.wootecam.festivals: error
     org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
+
 ---
 spring:
   config:
