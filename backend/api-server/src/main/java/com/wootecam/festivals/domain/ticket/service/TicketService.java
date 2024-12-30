@@ -6,7 +6,7 @@ import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.ticket.dto.TicketCreateRequest;
 import com.wootecam.festivals.domain.ticket.dto.TicketIdResponse;
 import com.wootecam.festivals.domain.ticket.dto.TicketListResponse;
-import com.wootecam.festivals.domain.ticket.dto.TicketResponse;
+import com.wootecam.festivals.domain.festival.dto.TicketResponse;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.entity.TicketStock;
 import com.wootecam.festivals.domain.ticket.repository.CurrentTicketWaitRedisRepository;

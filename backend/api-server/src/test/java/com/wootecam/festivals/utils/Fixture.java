@@ -3,7 +3,6 @@ package com.wootecam.festivals.utils;
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
-import com.wootecam.festivals.domain.ticket.entity.TicketStock;
 import java.time.LocalDateTime;
 
 public final class Fixture {
