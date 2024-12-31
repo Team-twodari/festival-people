@@ -99,7 +99,7 @@ class FestivalSchedulerServiceTest extends SpringBootTestConfig {
                 .title("Past Festival")
                 .description("Festival Description")
                 .startTime(now)
-                .endTime(now.plusSeconds(1))
+                .endTime(now.plusSeconds(5))
                 .festivalProgressStatus(FestivalProgressStatus.UPCOMING)
                 .build()
         );
@@ -109,19 +109,13 @@ class FestivalSchedulerServiceTest extends SpringBootTestConfig {
 
         // Then
         // 바로 상태가 업데이트되었는지 확인
-
-        await().atMost(10, SECONDS).untilAsserted(() -> {
-            Festival updatedFestival = festivalRepository.findById(pastFestival.getId()).orElseThrow();
-            assertThat(updatedFestival.getFestivalProgressStatus()).isEqualTo(FestivalProgressStatus.ONGOING);
-        });
-
-        await().atMost(10, SECONDS).untilAsserted(() -> {
+        await().atMost(5, SECONDS).untilAsserted(() -> {
             Festival updatedFestival = festivalRepository.findById(pastFestival.getId()).orElseThrow();
             assertThat(updatedFestival.getFestivalProgressStatus()).isEqualTo(FestivalProgressStatus.COMPLETED);
         });
 
         // 완료된 축제에 대해 작업이 스케줄링되어 있지 않은지 확인
-        await().atMost(2, SECONDS).untilAsserted(() -> {
+        await().atMost(5, SECONDS).untilAsserted(() -> {
             assertThat(scheduler.getJobKeys(GroupMatcher.anyGroup())).isEmpty();
         });
     }

@@ -23,7 +23,7 @@ spring:
       org:
         quartz:
           jobStore:
-            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            class: org.quartz.simpl.RAMJobStore
             driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
             useProperties: false
             misfireThreshold: 60000

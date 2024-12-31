@@ -41,7 +41,7 @@ public class PendingClaimScheduler {
                 processMessage(pendingMessage, streamKey, groupName);
             }
         } catch (RuntimeException e) {
-            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, "pending message 처리 중 에러 발생", e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, streamKey + "pending message 처리 중 에러 발생", e);
         }
     }
 
@@ -51,7 +51,8 @@ public class PendingClaimScheduler {
                     Duration.ofMillis(20000)); // 20초 이상 대기한 메시지만 Claim
             log.info("Message {} has been claimed.", pendingMessage.getIdAsString());
         } catch (RuntimeException e) {
-            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, "Stream claim 중 에러 발생", e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR,
+                    streamKey + " id: " + pendingMessage.getIdAsString() + "Stream claim 중 에러 발생", e);
         }
     }
 
@@ -101,7 +102,8 @@ public class PendingClaimScheduler {
             redisTemplate.opsForValue().increment(errorCountKey);
             logFailure(pendingMessage, "Processing exception: " + e.getMessage());
 
-            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, "메시지 처리 중 에러 발생", e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR,
+                    streamKey + " id: " + pendingMessage.getIdAsString() + "메시지 처리 중 에러 발생", e);
         }
     }
 

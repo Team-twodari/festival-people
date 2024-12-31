@@ -45,6 +45,7 @@ public class FestivalSchedulerService {
         log.debug("시작 시간 : {}", festival.getStartTime());
         log.debug("종료 시간 : {}", festival.getEndTime());
 
+
         scheduleStartTimeUpdate(findFestival);
         scheduleEndTimeUpdate(findFestival);
     }
@@ -88,13 +89,13 @@ public class FestivalSchedulerService {
                     .storeDurably(false)
                     .build();
 
-            int priority = eventType.equals("시작") ? 10 : 5;
+            int priority = eventType.equals("시작") ? 100 : 5;
 
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity(triggerKey, "festivalGroup")
                     .startAt(java.sql.Timestamp.valueOf(triggerTime))
                     .withPriority(priority)
-                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires())
                     .build();
 
             if (scheduler.checkExists(jobDetail.getKey())) {

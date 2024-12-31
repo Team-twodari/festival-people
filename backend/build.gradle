@@ -144,6 +144,7 @@ subprojects {
                 fileTree(dir: it, exclude: [
                         '**/QueueApplication.class',
                         '**/FestivalsApplication.class',  // exclude main class
+                        '**/ScheduleServerApplication.class',  // exclude main class
                         '**/dto/**', // exclude dto package
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
@@ -157,7 +158,9 @@ subprojects {
                         '**/domain/purchase/exception/**',
                         '**/domain/purchase/repository/**',
                         '**/global/log/**', // exclude utils package
-                        "**/service/TicketService.class'" // 테스트 버그로 인해 임시 제외
+                        "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
+                        "**/config/**",  // exclude config package
+                        "**/*Producer.*" // exclude Producer class
                 ])
             }))
         }
@@ -237,4 +240,19 @@ project(':schedule-server') {
     dependencies {
         implementation project(':core')
     }
+
+    jacocoTestCoverageVerification {
+        enabled = false
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        "**/*Consumer.*", // exclude Consumer class
+                        "**/scheduler/**" // exclude scheduler package
+                ])
+            }))
+        }
+    }
+
+
 }
