@@ -9,7 +9,6 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
@@ -20,20 +19,6 @@ public class SchedulerConfig {
 
     private final QuartzDataSourceProperties quartzDataSourceProperties;
     private final ApplicationContext applicationContext;
-
-    /**
-     * ThreadPoolTaskScheduler 설정
-     */
-    @Bean
-    public ThreadPoolTaskScheduler taskScheduler() {
-        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setPoolSize(10);
-        taskScheduler.setThreadNamePrefix("scheduler-");
-        taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
-        taskScheduler.setAwaitTerminationSeconds(60);
-        taskScheduler.initialize();
-        return taskScheduler;
-    }
 
     /**
      * Quartz 전용 데이터소스 설정
