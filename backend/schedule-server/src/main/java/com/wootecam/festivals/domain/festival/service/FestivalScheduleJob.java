@@ -42,7 +42,7 @@ public class FestivalScheduleJob implements Job {
             JobExecutionException jobExecutionException = new JobExecutionException(e);
             jobExecutionException.setRefireImmediately(true);
 
-            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, "축제 정보 업데이트 스케줄러 실행 중 오류 발생", e);
         }
     }
 }

@@ -1,7 +1,10 @@
 package com.wootecam.festivals.domain.festival.service;
 
+import static com.wootecam.festivals.domain.festival.exception.FestivalErrorCode.FESTIVAL_NOT_FOUND;
+
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
+import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.global.exception.GlobalErrorCode;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import java.time.LocalDateTime;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 public class FestivalSchedulerService {
 
     private final Scheduler scheduler;
+    private final FestivalRepository festivalRepository;
 
     /**
      * 축제의 시작 시간과 종료 시간을 스케줄링합니다. FestivalService에서 축제를 생성할 때 호출됩니다.
@@ -32,13 +36,17 @@ public class FestivalSchedulerService {
      * @param festival 스케줄링할 축제
      */
     public void scheduleStatusUpdate(Festival festival) {
+
+        Festival findFestival = festivalRepository.findById(festival.getId())
+                .orElseThrow(() -> new ApiException(FESTIVAL_NOT_FOUND));
+
         log.debug("Festival 스케줄링 - ID: {}", festival.getId());
         log.debug("현재 시간 : {}", LocalDateTime.now());
         log.debug("시작 시간 : {}", festival.getStartTime());
         log.debug("종료 시간 : {}", festival.getEndTime());
 
-        scheduleStartTimeUpdate(festival);
-        scheduleEndTimeUpdate(festival);
+        scheduleStartTimeUpdate(findFestival);
+        scheduleEndTimeUpdate(findFestival);
     }
 
     /**
