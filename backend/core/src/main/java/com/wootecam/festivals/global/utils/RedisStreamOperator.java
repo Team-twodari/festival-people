@@ -52,7 +52,7 @@ public class RedisStreamOperator {
     }
 
     // ConsumerGroup 존재 여부 확인
-    public boolean isStreamConsumerGroupExist(String streamKey, String consumerGroupName) {
+    private boolean isStreamConsumerGroupExist(String streamKey, String consumerGroupName) {
         Iterator<XInfoGroup> iterator = this.redisTemplate
                 .opsForStream().groups(streamKey).stream().iterator();
 
