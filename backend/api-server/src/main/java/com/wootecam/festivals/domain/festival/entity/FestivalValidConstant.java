@@ -1,4 +1,4 @@
-package com.wootecam.festivals.domain.festival.util;
+package com.wootecam.festivals.domain.festival.entity;
 
 public final class FestivalValidConstant {
 

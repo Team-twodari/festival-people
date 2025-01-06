@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
+import com.wootecam.festivals.domain.festival.entity.FestivalValidator;
 import com.wootecam.festivals.domain.member.entity.Member;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;

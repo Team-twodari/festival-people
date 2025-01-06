@@ -1,6 +1,5 @@
 package com.wootecam.festivals.domain.festival.entity;
 
-import com.wootecam.festivals.domain.festival.util.FestivalValidator;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.global.audit.BaseEntity;
 import com.wootecam.festivals.global.utils.DateTimeUtils;

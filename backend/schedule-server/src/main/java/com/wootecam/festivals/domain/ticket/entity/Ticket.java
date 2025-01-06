@@ -1,9 +1,9 @@
 package com.wootecam.festivals.domain.ticket.entity;
 
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidator.validTicket;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidator.validTicket;
 
-import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.member.entity.Member;
+import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.global.audit.BaseEntity;

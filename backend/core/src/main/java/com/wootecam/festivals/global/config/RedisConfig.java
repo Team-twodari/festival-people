@@ -6,6 +6,7 @@ import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamCon
 import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamConstants.TICKET_STREAM_KEY;
 
 import com.wootecam.festivals.global.utils.RedisStreamOperator;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Profile("!test")
 public class RedisConfig {
 
+    private final RedisStreamOperator redisStreamOperator;
+
     @Value("${spring.data.redis.host}")
     private String redisHost;
 
@@ -28,6 +31,10 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.password}")
     private String redisPassword;
+
+    public RedisConfig(RedisStreamOperator redisStreamOperator) {
+        this.redisStreamOperator = redisStreamOperator;
+    }
 
     @Bean
     @Profile("prod")
@@ -61,8 +68,8 @@ public class RedisConfig {
         return redisTemplate;
     }
 
-    @Bean
-    public void initStream(RedisStreamOperator redisStreamOperator) {
+    @PostConstruct
+    public void initStream() {
         redisStreamOperator.createStreamConsumerGroup(FESTIVAL_STREAM_KEY, FESTIVAL_STREAM_GROUP);
         redisStreamOperator.createStreamConsumerGroup(TICKET_STREAM_KEY, TICKET_STREAM_GROUP);
     }
