@@ -3,6 +3,9 @@ sourceSets {
         java {
             srcDirs += 'src/test/java'
         }
+        resources {
+            srcDirs += project(':schedule-server').file('src/main/resources')
+        }
     }
 }
 
