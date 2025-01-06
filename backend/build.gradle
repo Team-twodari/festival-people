@@ -42,9 +42,6 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // Jackson의 Java 8 날짜/시간 모듈
 
-        runtimeOnly 'com.mysql:mysql-connector-j'
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
         testCompileOnly 'org.projectlombok:lombok'
@@ -204,23 +201,6 @@ project(':core') {
     jacocoTestCoverageVerification.enabled = false
 }
 
-project(':e2e') {
-    bootJar {
-        enabled = false
-    }
-
-    jar {
-        enabled = false
-    }
-
-    tasks.withType(Test) {
-        jacoco.enabled = false
-    }
-
-    jacocoTestReport.enabled = false
-    jacocoTestCoverageVerification.enabled = false
-}
-
 project(':api-server') {
     dependencies {
         implementation project(':core')
@@ -231,9 +211,6 @@ project(':queue-server') {
     dependencies {
         implementation project(':core')
     }
-}
-
-project(':e2e') {
 }
 
 project(':schedule-server') {
@@ -253,6 +230,21 @@ project(':schedule-server') {
             }))
         }
     }
+}
 
+project(':e2e') {
+    bootJar {
+        enabled = false
+    }
 
+    jar {
+        enabled = false
+    }
+
+    tasks.withType(Test) {
+        jacoco.enabled = false
+    }
+
+    jacocoTestReport.enabled = false
+    jacocoTestCoverageVerification.enabled = false
 }
