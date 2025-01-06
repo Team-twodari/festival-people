@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.awaitility.Awaitility.await;
 
+import com.wootecam.festivals.domain.festival.dto.TicketResponse;
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.member.entity.Member;
@@ -118,15 +119,15 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
         void itUpdatesAndSchedulesTicketsCorrectly() {
             // When
             for (Ticket ticket : saleUpcomingTicketsWithinTenMinutes) {
-                ticketScheduleService.scheduleRedisTicketInfoUpdate(ticket);
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
             }
 
             for (Ticket ticket : saleUpcomingTicketsAfterTenMinutes) {
-                ticketScheduleService.scheduleRedisTicketInfoUpdate(ticket);
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
             }
 
             for (Ticket ticket : saleOngoingTickets) {
-                ticketScheduleService.scheduleRedisTicketInfoUpdate(ticket);
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
             }
 
             // Then
@@ -174,7 +175,7 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
             ticketStockRepository.saveAll(ticket.createTicketStock());
 
             // When
-            ticketScheduleService.scheduleRedisTicketInfoUpdate(ticket);
+            ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
 
             // Then
             await().untilAsserted(() -> {
