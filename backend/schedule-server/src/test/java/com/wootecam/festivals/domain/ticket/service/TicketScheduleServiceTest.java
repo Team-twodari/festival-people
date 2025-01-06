@@ -8,7 +8,9 @@ import static com.wootecam.festivals.domain.ticket.service.TicketScheduleService
 import static com.wootecam.festivals.domain.ticket.service.TicketScheduleServiceTestFixture.createUpcomingFestival;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.awaitility.Awaitility.await;
 
+import com.wootecam.festivals.domain.festival.dto.TicketResponse;
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.member.entity.Member;
@@ -27,16 +29,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @SpringBootTest
 @DisplayName("TicketScheduleService 통합 테스트")
 class TicketScheduleServiceTest extends SpringBootTestConfig {
 
     @Autowired
-    private ThreadPoolTaskScheduler taskScheduler;
+    private Scheduler scheduler;
 
     @Autowired
     private TicketScheduleService ticketScheduleService;
@@ -59,6 +64,9 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
     @Autowired
     private CurrentTicketWaitRedisRepository currentTicketWaitRedisRepository;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     private List<Ticket> saleUpcomingTicketsWithinTenMinutes;
     private List<Ticket> saleUpcomingTicketsAfterTenMinutes;
     private List<Ticket> saleOngoingTickets;
@@ -68,16 +76,19 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
     private int saleOngoingTicketsCount = 6;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws SchedulerException {
         clear();
+        scheduler.clear();
         Member admin = createMembers(1).get(0);
         memberRepository.save(admin);
 
         festival = createUpcomingFestival(admin);
         festivalRepository.save(festival);
 
-        saleUpcomingTicketsWithinTenMinutes = createSaleUpcomingTicketsWithinTenMinutes(saleUpcomingTicketsWithinTenMinutesCount, festival);
-        saleUpcomingTicketsAfterTenMinutes = createSaleUpcomingTicketsAfterTenMinutes(saleUpcomingTicketsAfterTenMinutesCount, festival);
+        saleUpcomingTicketsWithinTenMinutes = createSaleUpcomingTicketsWithinTenMinutes(
+                saleUpcomingTicketsWithinTenMinutesCount, festival);
+        saleUpcomingTicketsAfterTenMinutes = createSaleUpcomingTicketsAfterTenMinutes(
+                saleUpcomingTicketsAfterTenMinutesCount, festival);
         saleOngoingTickets = createSaleOngoingTickets(saleOngoingTicketsCount, festival);
 
         ticketRepository.saveAll(saleUpcomingTicketsWithinTenMinutes);
@@ -97,8 +108,6 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
         ticketStockRepository.saveAll(saleUpcomingTicketStocksWithinTenMinutes);
         ticketStockRepository.saveAll(saleUpcomingTicketStocksAfterTenMinutes);
         ticketStockRepository.saveAll(saleOngoingTicketStocks);
-
-        taskScheduler.getScheduledThreadPoolExecutor().getQueue().clear();
     }
 
     @Nested
@@ -109,35 +118,52 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
         @DisplayName("10분 이내에 판매 시작되는 티켓은 Redis에 즉시 업데이트하고, 나머지는 스케줄링한다")
         void itUpdatesAndSchedulesTicketsCorrectly() {
             // When
-            ticketScheduleService.scheduleRedisTicketInfoUpdate();
+            for (Ticket ticket : saleUpcomingTicketsWithinTenMinutes) {
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
+            }
+
+            for (Ticket ticket : saleUpcomingTicketsAfterTenMinutes) {
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
+            }
+
+            for (Ticket ticket : saleOngoingTickets) {
+                ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
+            }
 
             // Then
-            saleUpcomingTicketsWithinTenMinutes.forEach(ticket -> {
-                TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
-                assertThat(ticketInfo).isNotNull();
-                assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(), within(10, ChronoUnit.SECONDS));
-                assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(), within(10, ChronoUnit.SECONDS));
-            });
+            await().untilAsserted(() -> {
+                saleUpcomingTicketsWithinTenMinutes.forEach(ticket -> {
+                    TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
+                    System.out.println("디버그" + ticketInfo);
+                    assertThat(ticketInfo).isNotNull();
+                    assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(),
+                            within(10, ChronoUnit.SECONDS));
+                    assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(),
+                            within(10, ChronoUnit.SECONDS));
+                });
 
-            saleUpcomingTicketsAfterTenMinutes.forEach(ticket -> {
-                TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
-                assertThat(ticketInfo).isNull();
-            });
+                saleUpcomingTicketsAfterTenMinutes.forEach(ticket -> {
+                    TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
+                    assertThat(ticketInfo).isNull();
+                });
 
-            List<Long> currentTicketWait = currentTicketWaitRedisRepository.getCurrentTicketWait();
-            saleUpcomingTicketsWithinTenMinutes.forEach(ticket -> {
-                assertThat(currentTicketWait).contains(ticket.getId());
-            });
+                List<Long> currentTicketWait = currentTicketWaitRedisRepository.getCurrentTicketWait();
+                saleUpcomingTicketsWithinTenMinutes.forEach(ticket -> {
+                    assertThat(currentTicketWait).contains(ticket.getId());
+                });
 
-            saleOngoingTickets.forEach(ticket -> {
-                TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
-                assertThat(ticketInfo).isNotNull();
-                assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(), within(10, ChronoUnit.SECONDS));
-                assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(), within(10, ChronoUnit.SECONDS));
-            });
+                saleOngoingTickets.forEach(ticket -> {
+                    TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
+                    assertThat(ticketInfo).isNotNull();
+                    assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(),
+                            within(10, ChronoUnit.SECONDS));
+                    assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(),
+                            within(10, ChronoUnit.SECONDS));
+                });
 
-            // 티켓 재고와 티켓 판매 시각 정보 둘다 스케줄링 되기 때문에 2배
-            assertThat(taskScheduler.getScheduledThreadPoolExecutor().getQueue()).hasSize(saleUpcomingTicketsAfterTenMinutesCount * 2);
+                assertThat(scheduler.getTriggerKeys(GroupMatcher.anyGroup())).hasSize(
+                        saleUpcomingTicketsAfterTenMinutesCount);
+            });
         }
 
         @Test
@@ -149,17 +175,18 @@ class TicketScheduleServiceTest extends SpringBootTestConfig {
             ticketStockRepository.saveAll(ticket.createTicketStock());
 
             // When
-            ticketScheduleService.scheduleRedisTicketInfoUpdate();
+            ticketScheduleService.scheduleRedisTicketInfoUpdate(TicketResponse.of(ticket));
 
             // Then
-            TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
-            assertThat(ticketInfo).isNotNull();
-            assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(), within(10, ChronoUnit.SECONDS));
-            assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(), within(10, ChronoUnit.SECONDS));
-
-            List<Long> currentTicketWait = currentTicketWaitRedisRepository.getCurrentTicketWait();
-            assertThat(currentTicketWait).contains(ticket.getId());
-
+            await().untilAsserted(() -> {
+                TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(ticket.getId());
+                assertThat(ticketInfo).isNotNull();
+                assertThat(ticketInfo.startSaleTime()).isCloseTo(ticket.getStartSaleTime(),
+                        within(10, ChronoUnit.SECONDS));
+                assertThat(ticketInfo.endSaleTime()).isCloseTo(ticket.getEndSaleTime(), within(10, ChronoUnit.SECONDS));
+                List<Long> currentTicketWait = currentTicketWaitRedisRepository.getCurrentTicketWait();
+                assertThat(currentTicketWait).contains(ticket.getId());
+            });
         }
     }
 }

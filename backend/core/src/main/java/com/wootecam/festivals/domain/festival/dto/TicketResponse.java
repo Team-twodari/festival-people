@@ -11,4 +11,13 @@ public record TicketResponse(Long id,
                              LocalDateTime startSaleTime, LocalDateTime endSaleTime,
                              LocalDateTime refundEndTime,
                              LocalDateTime createdAt, LocalDateTime updatedAt) {
+
+    public static TicketResponse of(com.wootecam.festivals.domain.ticket.entity.Ticket ticket) {
+        return new TicketResponse(ticket.getId(),
+                ticket.getName(), ticket.getDetail(),
+                ticket.getPrice(), ticket.getQuantity(), (long) ticket.getQuantity(),
+                ticket.getStartSaleTime(), ticket.getEndSaleTime(),
+                ticket.getRefundEndTime(),
+                ticket.getCreatedAt(), ticket.getUpdatedAt());
+    }
 }

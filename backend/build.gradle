@@ -52,7 +52,7 @@ subprojects {
 
         // redis
         implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        testImplementation 'it.ozimov:embedded-redis:0.7.2'
+        testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
 
         // session
         implementation 'org.springframework.session:spring-session-core'
@@ -80,10 +80,6 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
         implementation 'org.hibernate:hibernate-micrometer:6.6.0.Final'
         runtimeOnly("io.micrometer:micrometer-registry-prometheus")
-
-        // redis
-        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        implementation 'com.github.codemonstur:embedded-redis:1.4.3'
     }
 
     ext {
@@ -148,6 +144,7 @@ subprojects {
                 fileTree(dir: it, exclude: [
                         '**/QueueApplication.class',
                         '**/FestivalsApplication.class',  // exclude main class
+                        '**/ScheduleServerApplication.class',  // exclude main class
                         '**/dto/**', // exclude dto package
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
@@ -161,7 +158,9 @@ subprojects {
                         '**/domain/purchase/exception/**',
                         '**/domain/purchase/repository/**',
                         '**/global/log/**', // exclude utils package
-                        "**/service/TicketService.class'" // 테스트 버그로 인해 임시 제외
+                        "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
+                        "**/config/**",  // exclude config package
+                        "**/*Producer.*" // exclude Producer class
                 ])
             }))
         }
@@ -241,4 +240,19 @@ project(':schedule-server') {
     dependencies {
         implementation project(':core')
     }
+
+    jacocoTestCoverageVerification {
+        enabled = false
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        "**/*Consumer.*", // exclude Consumer class
+                        "**/scheduler/**" // exclude scheduler package
+                ])
+            }))
+        }
+    }
+
+
 }

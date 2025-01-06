@@ -24,4 +24,13 @@ public enum FestivalProgressStatus implements EnumType {
     public String getDescription() {
         return description;
     }
+
+    public static FestivalProgressStatus from(String name) {
+        for (FestivalProgressStatus status : FestivalProgressStatus.values()) {
+            if (status.name().equals(name)) {
+                return status;
+            }
+        }
+        throw new IllegalArgumentException("No matching constant for [" + name + "]");
+    }
 }
