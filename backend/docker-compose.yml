@@ -25,6 +25,18 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
+  schedule-server:
+    build:
+      context: ./schedule-server
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   redis:
     image: "redis:latest"
     ports:
