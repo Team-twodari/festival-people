@@ -55,9 +55,6 @@ public class TicketScheduleConsumer implements StreamListener<String, ObjectReco
     @Override
     public void afterPropertiesSet() throws Exception {
         log.info("Starting TicketScheduleConsumer...");
-        // Consumer Group 설정
-        this.redisOperator.createStreamConsumerGroup(TICKET_STREAM_KEY, TICKET_STREAM_GROUP);
-
         // StreamMessageListenerContainer 설정
         this.container = this.redisOperator.createStreamMessageListenerContainer();
 

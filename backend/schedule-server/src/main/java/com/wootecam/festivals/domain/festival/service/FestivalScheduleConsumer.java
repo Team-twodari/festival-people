@@ -58,9 +58,6 @@ public class FestivalScheduleConsumer implements StreamListener<String, ObjectRe
     @Override
     public void afterPropertiesSet() throws Exception {
         log.info("Starting FestivalScheduleConsumer...");
-        // Consumer Group 설정
-        this.redisOperator.createStreamConsumerGroup(FESTIVAL_STREAM_KEY, FESTIVAL_STREAM_GROUP);
-
         // StreamMessageListenerContainer 설정
         this.container = this.redisOperator.createStreamMessageListenerContainer();
 
