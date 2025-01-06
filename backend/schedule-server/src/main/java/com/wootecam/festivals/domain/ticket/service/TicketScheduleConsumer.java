@@ -5,7 +5,7 @@ import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamCon
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wootecam.festivals.domain.ticket.entity.Ticket;
+import com.wootecam.festivals.domain.festival.dto.TicketResponse;
 import com.wootecam.festivals.global.exception.GlobalErrorCode;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.global.utils.RedisStreamOperator;
@@ -42,7 +42,7 @@ public class TicketScheduleConsumer implements StreamListener<String, ObjectReco
         log.info("Received message: {}", message);
 
         try {
-            Ticket ticket = objectMapper.readValue(message.getValue(), Ticket.class);
+            TicketResponse ticket = objectMapper.readValue(message.getValue(), TicketResponse.class);
             ticketScheduleService.scheduleRedisTicketInfoUpdate(ticket);
 
             redisTemplate.opsForStream().acknowledge(TICKET_STREAM_KEY, TICKET_STREAM_GROUP, message.getId());
