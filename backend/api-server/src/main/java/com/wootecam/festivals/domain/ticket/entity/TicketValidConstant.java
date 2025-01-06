@@ -1,4 +1,4 @@
-package com.wootecam.festivals.domain.ticket.utils;
+package com.wootecam.festivals.domain.ticket.entity;
 
 public final class TicketValidConstant {
 

@@ -1,23 +1,6 @@
-package com.wootecam.festivals.domain.ticket.utils;
+package com.wootecam.festivals.domain.ticket.entity;
 
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MAX_TICKET_DETAIL_LENGTH;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MAX_TICKET_NAME_LENGTH;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MAX_TICKET_PRICE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MAX_TICKET_QUANTITY;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MIN_TICKET_PRICE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.MIN_TICKET_QUANTITY;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_DETAIL_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_END_TIME_EMPTY_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_END_TIME_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_FESTIVAL_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_NAME_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_PRICE_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_QUANTITY_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_REFUND_TIME_EMPTY_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_REFUND_TIME_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_START_TIME_EMPTY_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_START_TIME_VALID_MESSAGE;
-import static com.wootecam.festivals.domain.ticket.utils.TicketValidConstant.TICKET_TIME_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.*;
 
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import java.time.LocalDateTime;

@@ -92,17 +92,6 @@ spring:
           username: root
           password:
 
-cloud:
-  aws:
-    region: ap-northeast-2
-    credentials:
-      accessKey: access-key
-      secretKey: secret-key
-    s3:
-      bucket: twodari
-  stack:
-    auto: true
-
 ---
 spring:
   config:
@@ -173,14 +162,3 @@ spring:
 logging:
   level:
     com.wootecam.festivals: debug
-
-cloud:
-  aws:
-    region: ap-northeast-2
-    credentials:
-      accessKey: access-key
-      secretKey: secret-key
-    s3:
-      bucket: twodari
-  stack:
-    auto: true

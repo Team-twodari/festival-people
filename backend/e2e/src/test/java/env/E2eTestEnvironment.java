@@ -58,7 +58,7 @@ public abstract class E2eTestEnvironment {
             .withUsername(user)
             .withPassword(password)
             .withNetwork(network)
-            .withInitScript("data/ddl.sql")
+            .withInitScript("tables_mysql_innodb.sql")
             .withNetworkAliases(mysqlHost)
             .withExposedPorts(mysqlPort)
             .waitingFor(Wait.forListeningPort());
@@ -84,11 +84,19 @@ public abstract class E2eTestEnvironment {
     // Queue 서버 컨테이너 설정
     private static GenericContainer<?> queueServerContainer = new GenericContainer<>(
             new ImageFromDockerfile().withDockerfile(Paths.get("../queue-server/Dockerfile")))
+            .withExposedPorts(8080)
             .withEnv("SPRING_PROFILES_ACTIVE", "docker")
-            .withExposedPorts(8081)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
+
+    // Queue 서버 컨테이너 설정
+    private static GenericContainer<?> scheduleServerContainer = new GenericContainer<>(
+            new ImageFromDockerfile().withDockerfile(Paths.get("../schedule-server/Dockerfile")))
+            .withExposedPorts(8080)
+            .withEnv("SPRING_PROFILES_ACTIVE", "docker")
+            .withNetwork(network)
+            .withLogConsumer(new Slf4jLogConsumer(logger));
 
     protected static String API_SERVER_URL;
     protected static String QUEUE_SERVER_URL;
@@ -99,20 +107,24 @@ public abstract class E2eTestEnvironment {
     public static void setUp() {
         mysqlContainer.start();
         redisContainer.start();
+
         apiServerContainer.start();
         queueServerContainer.start();
+        scheduleServerContainer.start();
 
         mysqlUrl = "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) + "/" + database;
         redisUrl = "redis://" + redisContainer.getHost() + ":" + redisContainer.getMappedPort(6379);
 
         API_SERVER_URL = "http://localhost:" + apiServerContainer.getMappedPort(8080);
-        QUEUE_SERVER_URL = "http://localhost:" + queueServerContainer.getMappedPort(8081);
+        QUEUE_SERVER_URL = "http://localhost:" + queueServerContainer.getMappedPort(8080);
     }
 
     @AfterAll
     public static void tearDown() {
         apiServerContainer.stop();
         queueServerContainer.stop();
+        scheduleServerContainer.stop();
+
         redisContainer.stop();
         mysqlContainer.stop();
     }
