@@ -112,7 +112,8 @@ public abstract class E2eTestEnvironment {
         queueServerContainer.start();
         scheduleServerContainer.start();
 
-        mysqlUrl = "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) + "/" + database;
+        mysqlUrl =
+                "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) + "/" + database;
         redisUrl = "redis://" + redisContainer.getHost() + ":" + redisContainer.getMappedPort(6379);
 
         API_SERVER_URL = "http://localhost:" + apiServerContainer.getMappedPort(8080);
@@ -135,10 +136,20 @@ public abstract class E2eTestEnvironment {
     protected void truncateRedis() {
         RedisClient redisClient = RedisClient.create(redisUrl);
         StatefulRedisConnection<String, String> connection = redisClient.connect();
-        connection.sync().flushall();
-        connection.close();
 
-        redisClient.shutdown();
+        try {
+            // Stream 데이터만 삭제 (Consumer Group 유지)
+            trimStream(connection, "festival-schedule-stream");
+            trimStream(connection, "ticket-schedule-stream");
+
+            // Redis의 다른 모든 키 삭제
+            connection.sync().keys("*").stream()
+                    .filter(key -> !key.equals("festival-schedule-stream") && !key.equals("ticket-schedule-stream"))
+                    .forEach(connection.sync()::del);
+        } finally {
+            connection.close();
+            redisClient.shutdown();
+        }
     }
 
     /**
@@ -160,6 +171,15 @@ public abstract class E2eTestEnvironment {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void trimStream(StatefulRedisConnection<String, String> connection, String streamKey) {
+        try {
+            // XTRIM 명령어로 Stream 데이터를 삭제
+            connection.sync().xtrim(streamKey, 0); // 모든 데이터를 삭제
+        } catch (Exception e) {
+            return;
         }
     }
 }
