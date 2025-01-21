@@ -174,6 +174,34 @@ public abstract class E2eTestEnvironment {
         }
     }
 
+    protected GenericContainer<?> startRecoveryScheduleServer() {
+        return new GenericContainer<>(
+                new ImageFromDockerfile().withDockerfile(Paths.get("../schedule-server/Dockerfile")))
+                .withExposedPorts(8080)
+                .withEnv("SPRING_PROFILES_ACTIVE", "docker")
+                .withNetwork(network)
+                .withLogConsumer(new Slf4jLogConsumer(logger))
+                .waitingFor(Wait.forHttp("/health").forStatusCode(200));
+    }
+
+    protected void stopRecoveryScheduleServer(GenericContainer<?> recoveryScheduleServerContainer) {
+        if (recoveryScheduleServerContainer != null && recoveryScheduleServerContainer.isRunning()) {
+            recoveryScheduleServerContainer.stop();
+        }
+    }
+
+    protected void startScheduleServer() {
+        if (!scheduleServerContainer.isRunning()) {
+            scheduleServerContainer.start();
+        }
+    }
+
+    protected void stopScheduleServer() {
+        if (scheduleServerContainer.isRunning()) {
+            scheduleServerContainer.stop();
+        }
+    }
+
     private void trimStream(StatefulRedisConnection<String, String> connection, String streamKey) {
         try {
             // XTRIM 명령어로 Stream 데이터를 삭제
