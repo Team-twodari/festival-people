@@ -43,7 +43,7 @@ spring:
         dataSource:
           schedule:
             driver: com.mysql.cj.jdbc.Driver
-            url: ${QUARTZ_DATASOURCE_URL}
+            URL: ${QUARTZ_DATASOURCE_URL}
             user: ${QUARTZ_DATASOURCE_USERNAME}
             password: ${QUARTZ_DATASOURCE_PASSWORD}
             maxConnections: 5
@@ -90,7 +90,7 @@ spring:
         dataSource:
           schedule:
             driver: com.mysql.cj.jdbc.Driver
-            URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true
+            URL: jdbc:mysql://localhost:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
             user: root
             password:
             maxConnections: 5
@@ -168,16 +168,19 @@ spring:
         generate_statistics: true
 
   quartz:
+    scheduler-name: quartzScheduler
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
     properties:
-      org.quartz:
-        dataSource:
-          schedule:
-            driver: com.mysql.cj.jdbc.Driver
-            URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true
-            user: root
-            password:
-            maxConnections: 5
-            provider: hikaricp
+      dataSource:
+        schedule:
+          driver: com.mysql.cj.jdbc.Driver
+          URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+          user: root
+          password:
+          maxConnections: 5
+          provider: hikaricp
 
 logging:
   level:
