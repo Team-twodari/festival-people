@@ -90,7 +90,7 @@ public abstract class E2eTestEnvironment {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forHttp("/health").forStatusCode(200));
 
-    // Queue 서버 컨테이너 설정
+    // Schedule 서버 컨테이너 설정
     private static GenericContainer<?> scheduleServerContainer = new GenericContainer<>(
             new ImageFromDockerfile().withDockerfile(Paths.get("../schedule-server/Dockerfile")))
             .withExposedPorts(8080)
