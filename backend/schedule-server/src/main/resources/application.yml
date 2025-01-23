@@ -173,14 +173,27 @@ spring:
     jdbc:
       initialize-schema: always
     properties:
-      dataSource:
-        schedule:
-          driver: com.mysql.cj.jdbc.Driver
-          URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-          user: root
-          password:
-          maxConnections: 5
-          provider: hikaricp
+      org.quartz:
+        scheduler:
+          instanceName: FestivalScheduler
+          instanceId: AUTO
+        jobStore:
+          class: org.quartz.impl.jdbcjobstore.JobStoreTX
+          driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+          useProperties: false
+          dataSource: schedule
+          isClustered: true
+          misfireThreshold: 30000
+          clusterCheckinInterval: 10000
+          tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
+        dataSource:
+          schedule:
+            driver: com.mysql.cj.jdbc.Driver
+            URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+            user: root
+            password:
+            maxConnections: 5
+            provider: hikaricp
 
 logging:
   level:
