@@ -44,6 +44,9 @@ public class SchedulerConfig {
     @Bean
     @QuartzDataSource
     public DataSource quartzDataSource() {
+        log.info("Quartz DataSource URL: {}", url);
+        log.info("Quartz DataSource Username: {}", username);
+        log.info("Quartz DataSource Driver: {}", driverClassName);
         return DataSourceBuilder.create()
                 .url(url)
                 .username(username)
