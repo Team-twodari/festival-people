@@ -36,12 +36,19 @@ public class PendingClaimScheduler {
             // PENDING 상태의 메시지 가져오기
             PendingMessages pendingMessages = redisTemplate.opsForStream()
                     .pending(streamKey, groupName, Range.unbounded(), MAX_NUMBER_FETCH);
+
+            // PENDING 메시지가 없는 경우 처리 종료
+            if (pendingMessages == null || pendingMessages.isEmpty()) {
+                log.info("No pending messages found for streamKey: {} and groupName: {}", streamKey, groupName);
+                return; // 메시지가 없으면 정상 종료
+            }
+
             for (PendingMessage pendingMessage : pendingMessages) {
                 claimMessage(pendingMessage, streamKey, groupName);
                 processMessage(pendingMessage, streamKey, groupName);
             }
         } catch (RuntimeException e) {
-            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, streamKey + "pending message 처리 중 에러 발생", e);
+            throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR, streamKey + " pending message 처리 중 에러 발생", e);
         }
     }
 
@@ -52,7 +59,7 @@ public class PendingClaimScheduler {
             log.info("Message {} has been claimed.", pendingMessage.getIdAsString());
         } catch (RuntimeException e) {
             throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR,
-                    streamKey + " id: " + pendingMessage.getIdAsString() + "Stream claim 중 에러 발생", e);
+                    streamKey + " id: " + pendingMessage.getIdAsString() + " Stream claim 중 에러 발생", e);
         }
     }
 
@@ -62,9 +69,10 @@ public class PendingClaimScheduler {
             List<ObjectRecord<String, String>> messagesToProcess = redisTemplate.opsForStream()
                     .range(String.class, streamKey, Range.just(pendingMessage.getIdAsString()));
 
-            if (messagesToProcess.isEmpty()) {
-                log.warn("Message {} is not present in the stream.", pendingMessage.getIdAsString());
-                return;
+            // 메시지가 없을 경우 처리 종료
+            if (messagesToProcess == null || messagesToProcess.isEmpty()) {
+                log.info("Message {} not found in the stream. Skipping processing.", pendingMessage.getIdAsString());
+                return; // 메시지가 없으면 정상 종료
             }
 
             ObjectRecord<String, String> message = messagesToProcess.get(0);
@@ -103,7 +111,7 @@ public class PendingClaimScheduler {
             logFailure(pendingMessage, "Processing exception: " + e.getMessage());
 
             throw new ApiException(GlobalErrorCode.INTERNAL_SERVER_ERROR,
-                    streamKey + " id: " + pendingMessage.getIdAsString() + "메시지 처리 중 에러 발생", e);
+                    streamKey + " id: " + pendingMessage.getIdAsString() + " 메시지 처리 중 에러 발생", e);
         }
     }
 
