@@ -1,12 +1,5 @@
 package com.wootecam.festivals.global.config;
 
-import static com.wootecam.festivals.domain.festival.constant.FestivalRedisStreamConstants.FESTIVAL_STREAM_GROUP;
-import static com.wootecam.festivals.domain.festival.constant.FestivalRedisStreamConstants.FESTIVAL_STREAM_KEY;
-import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamConstants.TICKET_STREAM_GROUP;
-import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamConstants.TICKET_STREAM_KEY;
-
-import com.wootecam.festivals.global.utils.RedisStreamOperator;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +14,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Profile("!test")
 public class RedisConfig {
 
-    private final RedisStreamOperator redisStreamOperator;
-
     @Value("${spring.data.redis.host}")
     private String redisHost;
 
@@ -32,11 +23,7 @@ public class RedisConfig {
     @Value("${spring.data.redis.password}")
     private String redisPassword;
 
-    public RedisConfig(RedisStreamOperator redisStreamOperator) {
-        this.redisStreamOperator = redisStreamOperator;
-    }
-
-    @Bean
+    @Bean(name = "redisConnectionFactory")
     @Profile("prod")
     public RedisConnectionFactory redisConnectionFactoryProd() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
@@ -47,7 +34,7 @@ public class RedisConfig {
         return new LettuceConnectionFactory(redisConfig);
     }
 
-    @Bean
+    @Bean(name = "redisConnectionFactory")
     @Profile("local")
     public RedisConnectionFactory redisConnectionFactoryLocal() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
@@ -66,11 +53,5 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         return redisTemplate;
-    }
-
-    @PostConstruct
-    public void initStream() {
-        redisStreamOperator.createStreamConsumerGroup(FESTIVAL_STREAM_KEY, FESTIVAL_STREAM_GROUP);
-        redisStreamOperator.createStreamConsumerGroup(TICKET_STREAM_KEY, TICKET_STREAM_GROUP);
     }
 }

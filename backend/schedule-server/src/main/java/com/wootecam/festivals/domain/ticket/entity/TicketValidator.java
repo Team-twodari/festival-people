@@ -1,6 +1,23 @@
 package com.wootecam.festivals.domain.ticket.entity;
 
-import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.*;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MAX_TICKET_DETAIL_LENGTH;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MAX_TICKET_NAME_LENGTH;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MAX_TICKET_PRICE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MAX_TICKET_QUANTITY;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MIN_TICKET_PRICE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.MIN_TICKET_QUANTITY;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_DETAIL_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_END_TIME_EMPTY_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_END_TIME_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_FESTIVAL_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_NAME_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_PRICE_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_QUANTITY_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_REFUND_TIME_EMPTY_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_REFUND_TIME_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_START_TIME_EMPTY_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_START_TIME_VALID_MESSAGE;
+import static com.wootecam.festivals.domain.ticket.entity.TicketValidConstant.TICKET_TIME_VALID_MESSAGE;
 
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import java.time.LocalDateTime;
@@ -87,7 +104,7 @@ public class TicketValidator {
             throw new IllegalArgumentException(TICKET_START_TIME_VALID_MESSAGE);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().minusMinutes(1);
 
         if (now.isAfter(endSaleTime) || festival.getEndTime().isBefore(endSaleTime)) {
             throw new IllegalArgumentException(TICKET_END_TIME_VALID_MESSAGE);
