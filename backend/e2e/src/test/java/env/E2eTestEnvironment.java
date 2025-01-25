@@ -58,7 +58,7 @@ public abstract class E2eTestEnvironment {
             .withUsername(user)
             .withPassword(password)
             .withNetwork(network)
-            .withInitScript("tables_mysql_innodb.sql")
+            .withInitScript("init.sql")
             .withNetworkAliases(mysqlHost)
             .withExposedPorts(mysqlPort)
             .waitingFor(Wait.forListeningPort());
@@ -175,13 +175,16 @@ public abstract class E2eTestEnvironment {
     }
 
     protected GenericContainer<?> startRecoveryScheduleServer() {
-        return new GenericContainer<>(
+        GenericContainer<?> recoveryScheduleServerContainer = new GenericContainer<>(
                 new ImageFromDockerfile().withDockerfile(Paths.get("../schedule-server/Dockerfile")))
                 .withExposedPorts(8080)
                 .withEnv("SPRING_PROFILES_ACTIVE", "docker")
                 .withNetwork(network)
-                .withLogConsumer(new Slf4jLogConsumer(logger))
-                .waitingFor(Wait.forHttp("/health").forStatusCode(200));
+                .withLogConsumer(new Slf4jLogConsumer(logger));
+
+        recoveryScheduleServerContainer.start();
+
+        return recoveryScheduleServerContainer;
     }
 
     protected void stopRecoveryScheduleServer(GenericContainer<?> recoveryScheduleServerContainer) {
