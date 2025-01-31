@@ -20,47 +20,48 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         default_schema: twodari
+
   quartz:
-    jdbc:
-      initialize-schema: never # Quartz 스키마를 초기화하지 않도록 설정
+    scheduler-name: quartzScheduler
     job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
     properties:
-      org:
-        quartz:
-          jobStore:
-            class: org.quartz.impl.jdbcjobstore.JobStoreTX
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            useProperties: false
-            misfireThreshold: 60000
-            isClustered: true
-            tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
-            clusterCheckinInterval: 20000
-            dataSource: schedule
-          scheduler.instanceId: AUTO
-          threadPool:
-            class: org.quartz.simpl.SimpleThreadPool
-            threadCount: 25
-            threadPriority: 5
+      org.quartz:
+        scheduler:
+          instanceName: FestivalScheduler
+          instanceId: AUTO
+        jobStore:
+          class: org.quartz.impl.jdbcjobstore.JobStoreTX
+          driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+          useProperties: false
+          dataSource: schedule
+          isClustered: true
+          misfireThreshold: 30000
+          clusterCheckinInterval: 10000
+          tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
+        dataSource:
+          schedule:
+            driver: com.mysql.cj.jdbc.Driver
+            URL: ${QUARTZ_DATASOURCE_URL}
+            user: ${QUARTZ_DATASOURCE_USERNAME}
+            password: ${QUARTZ_DATASOURCE_PASSWORD}
+            maxConnections: 5
+            provider: hikaricp
+
 
   data:
     redis:
       host: localhost
       port: 6379
       password: ""
-  org:
-    quartz:
-      datasource:
-        schedule:
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: ${QUARTZ_DATASOURCE_URL}
-          username: ${QUARTZ_DATASOURCE_USERNAME}
-          password: ${QUARTZ_DATASOURCE_PASSWORD}
 
 logging:
   level:
     org.hibernate.SQL: off
     com.wootecam.festivals: warn
     org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
+    org.springframework.scheduling.quartz: debug
 
 management:
   endpoints:
@@ -83,15 +84,17 @@ spring:
     username: root
     password:
 
-  org:
-    quartz:
-      datasource:
-        schedule:
-          driver-class-name:
-          url: jdbc:mysql://localhost:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true
-          username: root
-          password:
-
+  quartz:
+    properties:
+      org.quartz:
+        dataSource:
+          schedule:
+            driver: com.mysql.cj.jdbc.Driver
+            URL: jdbc:mysql://localhost:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+            user: root
+            password:
+            maxConnections: 5
+            provider: hikaricp
 ---
 spring:
   config:
@@ -126,6 +129,11 @@ spring:
           max-size: 50
           queue-capacity: 2000
 
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+
 logging:
   level:
     org.hibernate.SQL: off
@@ -158,6 +166,34 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         generate_statistics: true
+
+  quartz:
+    scheduler-name: quartzScheduler
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org.quartz:
+        scheduler:
+          instanceName: FestivalScheduler
+          instanceId: AUTO
+        jobStore:
+          class: org.quartz.impl.jdbcjobstore.JobStoreTX
+          driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+          useProperties: false
+          dataSource: schedule
+          isClustered: true
+          misfireThreshold: 30000
+          clusterCheckinInterval: 10000
+          tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
+        dataSource:
+          schedule:
+            driver: com.mysql.cj.jdbc.Driver
+            URL: jdbc:mysql://mysql:3306/schedule?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+            user: root
+            password:
+            maxConnections: 5
+            provider: hikaricp
 
 logging:
   level:

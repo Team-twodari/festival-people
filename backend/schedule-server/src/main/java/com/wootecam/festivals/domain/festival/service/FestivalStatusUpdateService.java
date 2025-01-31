@@ -3,8 +3,8 @@ package com.wootecam.festivals.domain.festival.service;
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.entity.FestivalProgressStatus;
 import com.wootecam.festivals.domain.festival.exception.FestivalErrorCode;
-import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
+import com.wootecam.festivals.global.exception.type.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class FestivalStatusUpdateService {
     public void updateFestivalStatus(Long festivalId, FestivalProgressStatus newStatus) {
         log.debug("축제 상태 업데이트 시도 - 축제 ID: {}, 새로운 상태: {}", festivalId, newStatus);
 
-        Festival festival = festivalRepository.findById(festivalId)
+        Festival festival = festivalRepository.findByIdForUpdate(festivalId)
                 .orElseThrow(() -> {
                     log.warn("축제를 찾을 수 없음 - 축제 ID: {}", festivalId);
                     return new ApiException(FestivalErrorCode.FESTIVAL_NOT_FOUND);
