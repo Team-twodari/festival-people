@@ -25,7 +25,7 @@ spring:
     scheduler-name: quartzScheduler
     job-store-type: jdbc
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
     properties:
       org.quartz:
         scheduler:
@@ -159,7 +159,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -171,7 +171,7 @@ spring:
     scheduler-name: quartzScheduler
     job-store-type: jdbc
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
     properties:
       org.quartz:
         scheduler:
@@ -183,8 +183,8 @@ spring:
           useProperties: false
           dataSource: schedule
           isClustered: true
-          misfireThreshold: 30000
-          clusterCheckinInterval: 10000
+          misfireThreshold: 10000
+          clusterCheckinInterval: 5000
           tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
         dataSource:
           schedule:

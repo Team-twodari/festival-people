@@ -60,6 +60,7 @@ services:
       TZ: Asia/Seoul
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql/init/:/docker-entrypoint-initdb.d/  # 초기화 SQL 파일 마운트
     networks:
       - app-network
 
