@@ -1,6 +1,10 @@
+import static Fixture.ApiRequestFixture.createFestivalCreateRequest;
+import static Fixture.ApiRequestFixture.createMemberCreateRequest;
+import static Fixture.ApiRequestFixture.createMemberLoginRequest;
+import static Fixture.ApiRequestFixture.createTicketCreateRequest;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static Fixture.ApiRequestFixture.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import env.E2eTestEnvironment;
@@ -429,5 +433,152 @@ class E2eTest extends E2eTestEnvironment {
                 .body("data.tickets.remainStock[0]", equalTo(ticketQuantity - 1));
     }
 
+    @Test
+    @DisplayName("회원이 축제를 생성하면 스케줄링 되어서 축제 상태가 바뀐다.")
+    void testFestivalWithSchedule() throws JsonProcessingException, InterruptedException {
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberCreateRequest("admin", "admin@email.com"))
+                .when()
+                .post("/api/v1/member/signup")
+                .then()
+                .statusCode(201);
+
+        // Step 2: Admin 로그인 후 세션 쿠키 얻기
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberLoginRequest("admin@email.com"))
+                .filter(adminCookieFilter)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(200);
+
+        // Step 3: Admin 축제 생성
+        Response festivalResponse = given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createFestivalCreateRequest(LocalDateTime.now()))
+                .filter(adminCookieFilter)
+                .when()
+                .post("/api/v1/festivals")
+                .then()
+                .statusCode(201)
+                .body("data.festivalId", notNullValue())
+                .extract().response();
+
+        int festivalId = festivalResponse.path("data.festivalId");
+
+        Thread.sleep(5000);
+
+        given()
+                .baseUri(API_SERVER_URL)
+                .filter(userCookieFilter)
+                .when()
+                .get("/api/v1/festivals/" + festivalId)
+                .then()
+                .statusCode(200)
+                .body("data.festivalId", equalTo(festivalId))
+                .body("data.festivalProgressStatus", equalTo("ONGOING"));
+    }
+
+    @Test
+    @DisplayName("회원이 축제와 티켓을 생성하면 티켓이 스케줄링 되어서 대기열에 참여할 수 있다.")
+        // 분리 축제 스케줄링 + 티켓 스케줄링 + 재처리 로직
+    void testFestivalTicketWithSchedule() throws JsonProcessingException {
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberCreateRequest("admin", "admin@email.com"))
+                .when()
+                .post("/api/v1/member/signup")
+                .then()
+                .statusCode(201);
+
+        // Step 2: Admin 로그인 후 세션 쿠키 얻기
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberLoginRequest("admin@email.com"))
+                .filter(adminCookieFilter)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(200);
+
+        // Step 3: Admin 축제 생성
+        Response festivalResponse = given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createFestivalCreateRequest(LocalDateTime.now().plusDays(7)))
+                .filter(adminCookieFilter)
+                .when()
+                .post("/api/v1/festivals")
+                .then()
+                .statusCode(201)
+                .body("data.festivalId", notNullValue())
+                .extract().response();
+
+        int festivalId = festivalResponse.path("data.festivalId");
+
+        // Step 4: Admin 티켓 생성
+        int ticketQuantity = 100;
+        Response ticketResponse = given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createTicketCreateRequest(ticketQuantity, LocalDateTime.now()))
+                .filter(adminCookieFilter)
+                .when()
+                .post("/api/v1/festivals/" + festivalId + "/tickets")
+                .then()
+                .statusCode(201)
+                .body("data.ticketId", notNullValue())
+                .extract().response();
+
+        int ticketId = ticketResponse.path("data.ticketId");
+
+        // Step 5: User 회원가입
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberCreateRequest("user", "user@email.com"))
+                .when()
+                .post("/api/v1/member/signup")
+                .then()
+                .statusCode(201);
+
+        // Step 6: User 로그인 후 세션 쿠키 얻기
+        given()
+                .baseUri(API_SERVER_URL)
+                .contentType(ContentType.JSON)
+                .body(createMemberLoginRequest("user@email.com"))
+                .filter(userCookieFilter)
+                .when()
+                .post("/api/v1/auth/login")
+                .then()
+                .statusCode(200);
+
+        // Step 7: User 축제 상세 조회
+        given()
+                .baseUri(API_SERVER_URL)
+                .filter(userCookieFilter)
+                .when()
+                .get("/api/v1/festivals/" + festivalId)
+                .then()
+                .statusCode(200)
+                .body("data.festivalId", equalTo(festivalId));
+
+        // 대기열 참가
+        given()
+                .baseUri(QUEUE_SERVER_URL)
+                .filter(userCookieFilter)
+                .when()
+                .get("/api/v1/festivals/" + festivalId + "/tickets/" + ticketId + "/purchase/wait")
+                .then()
+                .statusCode(200)
+                .extract().response();
+    }
     // 재고 롤백 프로세스
 }
