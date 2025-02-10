@@ -16,14 +16,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @DisplayName("보상 트랜잭션 테스트")
 class CompensationServiceTest {
-
-    @Mock
-    private RedisTemplate<String, String> redisTemplate;
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -46,19 +42,21 @@ class CompensationServiceTest {
         // Given
         String paymentId = "test-payment-id";
         Long ticketId = 1L;
-        Long ticketStockId = 100L;
+        Long memberId = 1L;
 
         when(ticketStockCountRedisRepository.increaseTicketStockCount(ticketId)).thenReturn(1L);
         when(jdbcTemplate.update(anyString(), any(Long.class))).thenReturn(1);
 
         // When
-        compensationService.compensateFailedPurchase(paymentId, ticketId, ticketStockId);
+        compensationService.compensateFailedPurchase(paymentId, ticketId, memberId);
 
         // Then
         verify(ticketStockCountRedisRepository).increaseTicketStockCount(ticketId);
         verify(jdbcTemplate).update(
-                eq("UPDATE ticket_stock SET ticket_stock_member_id = NULL WHERE ticket_stock_id = ?"),
-                eq(ticketStockId)
+                eq("""
+                        UPDATE ticket_stock SET ticket_stock_member_id = NULL 
+                        WHERE ticket_stock_member_id = ? and ticket_id = ?"""),
+                eq(memberId), eq(ticketId)
         );
     }
 
@@ -89,21 +87,22 @@ class CompensationServiceTest {
         // Given
         String paymentId = "test-payment-id";
         Long ticketId = 1L;
-        Long ticketStockId = 100L;
+        Long memberId = 1L;
 
         when(ticketStockCountRedisRepository.increaseTicketStockCount(ticketId)).thenReturn(1L);
         doThrow(new DataAccessException("Database error") {
-        })
-                .when(jdbcTemplate).update(anyString(), any(Long.class));
+        }).when(jdbcTemplate).update(anyString(), any(Long.class));
 
         // When
-        compensationService.compensateFailedPurchase(paymentId, ticketId, ticketStockId);
+        compensationService.compensateFailedPurchase(paymentId, ticketId, memberId);
 
         // Then
         verify(ticketStockCountRedisRepository).increaseTicketStockCount(ticketId);
         verify(jdbcTemplate).update(
-                eq("UPDATE ticket_stock SET ticket_stock_member_id = NULL WHERE ticket_stock_id = ?"),
-                eq(ticketStockId)
+                eq("""
+                        UPDATE ticket_stock SET ticket_stock_member_id = NULL 
+                        WHERE ticket_stock_member_id = ? and ticket_id = ?"""),
+                eq(memberId), eq(ticketId)
         );
     }
 
