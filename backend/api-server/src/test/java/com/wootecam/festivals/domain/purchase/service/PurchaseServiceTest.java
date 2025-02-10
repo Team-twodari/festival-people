@@ -240,7 +240,8 @@ class PurchaseServiceTest extends SpringBootTestConfig {
                 ticketStockJdbcRepository.saveTicketStocks(ticket.createTicketStock());
                 purchaseRepository.save(Purchase.builder()
                         .ticket(ticket)
-                        .purchaseStatus(PurchaseStatus.PURCHASED)
+                        .paymentUuid("paymentUuid")
+                        .purchaseStatus(PurchaseStatus.PAID)
                         .purchaseTime(LocalDateTime.now())
                         .member(member)
                         .build());
@@ -408,7 +409,8 @@ class PurchaseServiceTest extends SpringBootTestConfig {
             ticketStockJdbcRepository.saveTicketStocks(ticket.createTicketStock());
             purchaseRepository.save(Purchase.builder()
                     .ticket(ticket)
-                    .purchaseStatus(PurchaseStatus.PURCHASED)
+                    .paymentUuid("paymentUuid")
+                    .purchaseStatus(PurchaseStatus.PAID)
                     .purchaseTime(LocalDateTime.now())
                     .member(purchaser)
                     .build());
