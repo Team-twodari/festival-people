@@ -65,7 +65,6 @@ public class RedisStreamOperator {
         return false;
     }
 
-
     // RedisOperator :: 기본 StreamMessageListenerContainer 생성
     public StreamMessageListenerContainer<String, ObjectRecord<String, String>> createStreamMessageListenerContainer() {
         return StreamMessageListenerContainer.create(

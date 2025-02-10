@@ -23,7 +23,7 @@ import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.repository.TicketRepository;
 import com.wootecam.festivals.domain.ticket.service.TicketCacheService;
 import com.wootecam.festivals.global.queue.CustomQueue;
-import com.wootecam.festivals.global.queue.dto.PurchaseData;
+import com.wootecam.festivals.domain.purchase.dto.PurchaseData;
 import com.wootecam.festivals.global.queue.exception.QueueFullException;
 import com.wootecam.festivals.global.utils.TimeProvider;
 import com.wootecam.festivals.utils.Fixture;

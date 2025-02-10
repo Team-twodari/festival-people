@@ -12,13 +12,11 @@ import static org.mockito.Mockito.when;
 
 import com.wootecam.festivals.domain.festival.entity.Festival;
 import com.wootecam.festivals.domain.festival.stub.FestivalStub;
-import com.wootecam.festivals.domain.payment.excpetion.PaymentErrorCode;
-import com.wootecam.festivals.domain.payment.service.PaymentService;
-import com.wootecam.festivals.domain.payment.service.PaymentService.PaymentStatus;
+import com.wootecam.festivals.domain.payment.exception.PaymentErrorCode;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.service.TicketCacheService;
 import com.wootecam.festivals.global.exception.type.ApiException;
-import com.wootecam.festivals.global.queue.dto.PurchaseData;
+import com.wootecam.festivals.domain.purchase.dto.PurchaseData;
 import com.wootecam.festivals.global.queue.service.QueueService;
 import com.wootecam.festivals.global.utils.TimeProvider;
 import com.wootecam.festivals.utils.Fixture;

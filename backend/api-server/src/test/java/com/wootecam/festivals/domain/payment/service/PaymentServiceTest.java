@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
-import com.wootecam.festivals.domain.payment.excpetion.PaymentErrorCode;
-import com.wootecam.festivals.domain.payment.service.PaymentService.PaymentStatus;
+import com.wootecam.festivals.domain.payment.exception.PaymentErrorCode;
 import com.wootecam.festivals.domain.purchase.service.CompensationService;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import java.util.UUID;
@@ -20,17 +19,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PaymentService 클래스")
+@DisplayName("PaymentResultService 클래스")
 class PaymentServiceTest {
 
-    private PaymentService paymentService;
+    private PaymentResultService paymentService;
 
     @Mock
     CompensationService compensationService;
 
     @BeforeEach
     void setUp() {
-        paymentService = new PaymentService(compensationService);
+        paymentService = new PaymentResultService(compensationService);
     }
 
     @Nested

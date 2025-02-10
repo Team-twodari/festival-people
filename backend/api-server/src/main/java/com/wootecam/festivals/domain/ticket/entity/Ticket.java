@@ -98,7 +98,7 @@ public class Ticket extends BaseEntity {
                 .ticket(this)
                 .member(member)
                 .purchaseTime(LocalDateTime.now())
-                .purchaseStatus(PurchaseStatus.PURCHASED)
+                .purchaseStatus(PurchaseStatus.INITIATED)
                 .build();
     }
 

@@ -213,6 +213,12 @@ project(':queue-server') {
     }
 }
 
+project('payment-server') {
+    dependencies {
+        implementation project(':core')
+    }
+}
+
 project(':schedule-server') {
     dependencies {
         implementation project(':core')

@@ -1,10 +1,10 @@
 package com.wootecam.festivals.domain.purchase.controller;
 
-import com.wootecam.festivals.domain.payment.service.PaymentService;
 import com.wootecam.festivals.domain.purchase.dto.PaymentIdResponse;
 import com.wootecam.festivals.domain.purchase.dto.PaymentStatusResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
+import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.domain.purchase.service.PurchaseFacadeService;
 import com.wootecam.festivals.domain.purchase.service.PurchaseService;
 import com.wootecam.festivals.domain.ticket.repository.PurchaseSessionRedisRepository;
@@ -12,7 +12,7 @@ import com.wootecam.festivals.global.api.ApiResponse;
 import com.wootecam.festivals.global.auth.AuthUser;
 import com.wootecam.festivals.global.auth.Authentication;
 import com.wootecam.festivals.global.auth.purchase.PurchaseSession;
-import com.wootecam.festivals.global.queue.dto.PurchaseData;
+import com.wootecam.festivals.domain.purchase.dto.PurchaseData;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,14 +116,10 @@ public class PurchaseController {
                                                                @PathVariable Long ticketId,
                                                                @PathVariable String paymentId,
                                                                @AuthUser Authentication authentication) {
-        log.debug("Checking purchase status festivalId : {}, ticketId : {}, memberId : {}", festivalId, ticketId,
-                authentication.memberId());
-
-        log.debug("결제 상태 확인 중 - 축제 ID: {}, 티켓 ID: {}, 회원 ID: {}, 결제 ID: {}",
+        log.debug("현재 결제 상태 확인 - 축제 ID: {}, 티켓 ID: {}, 회원 ID: {}, 결제 ID: {}",
                 festivalId, ticketId, authentication.memberId(), paymentId);
+        PurchaseStatus paymentStatus = purchaseFacadeService.getPaymentStatus(paymentId);
 
-        PaymentService.PaymentStatus status = purchaseFacadeService.getPaymentStatus(paymentId);
-
-        return ApiResponse.of(new PaymentStatusResponse(status));
+        return ApiResponse.of(new PaymentStatusResponse(paymentStatus));
     }
 }

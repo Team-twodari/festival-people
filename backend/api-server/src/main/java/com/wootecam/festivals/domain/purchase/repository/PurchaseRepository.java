@@ -3,6 +3,7 @@ package com.wootecam.festivals.domain.purchase.repository;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.my.dto.MyPurchasedFestivalResponse;
 import com.wootecam.festivals.domain.my.dto.MyPurchasedTicketResponse;
+import com.wootecam.festivals.domain.payment.entity.Payment;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import java.time.LocalDateTime;
@@ -16,6 +17,8 @@ import org.springframework.data.repository.query.Param;
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     boolean existsByTicketAndMember(Ticket ticket, Member member);
+
+    Optional<Purchase> findByPaymentUuid(String paymentUuid);
 
     @Query("""
             SELECT new com.wootecam.festivals.domain.my.dto.MyPurchasedTicketResponse(
