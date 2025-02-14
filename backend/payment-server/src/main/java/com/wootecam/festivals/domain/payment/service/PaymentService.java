@@ -29,8 +29,8 @@ public class PaymentService {
     }
 
     /**
-     * 결제를 처리하는 메서드
-     * 외부 결제 서버 문제로 실패하는 경우 최대 3회 재시도합니다.
+     * <p>결제를 처리하는 메서드</p>
+     * <p>내부 결제 서버 문제로 실패하는 경우 최대 3회 재시도합니다.</p>
      * @param attempt 현재 재시도 횟수
      * @param paymentId 결제 ID
      * @return  결제 결과
