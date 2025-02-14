@@ -7,10 +7,6 @@ public enum PaymentStatus {
     FAILED_CLIENT, // 잔액 부족 등의 사용자 과실로 인한 결제 실패
     FAILED_SERVER; // 네트워크, 외부 결제 서버의 단기 장애 등의 외부 요소 과실로 인한 결제 실패
 
-    public boolean isSuccess() {
-        return this == SUCCESS;
-    }
-
     public boolean isFailed() {
         return this == FAILED_CLIENT || this == FAILED_SERVER;
     }
