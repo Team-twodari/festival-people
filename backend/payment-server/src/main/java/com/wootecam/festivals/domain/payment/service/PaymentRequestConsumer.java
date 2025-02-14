@@ -12,7 +12,6 @@ import com.wootecam.festivals.global.exception.GlobalErrorCode;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.global.utils.RedisStreamOperator;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -94,15 +93,7 @@ public class PaymentRequestConsumer implements StreamListener<String, ObjectReco
         log.info("Starting PaymentRequestConsumer...");
 
         // 1) StreamMessageListenerContainer 생성
-        this.container = StreamMessageListenerContainer.create(
-                Objects.requireNonNull(this.redisTemplate.getConnectionFactory()),
-                StreamMessageListenerContainer
-                        .StreamMessageListenerContainerOptions.builder()
-                        .targetType(String.class)
-                        .pollTimeout(Duration.ofSeconds(5))
-                        .batchSize(10)
-                        .build()
-        );
+        this.container = redisStreamOperator.createStreamMessageListenerContainer(5, 10);
 
         // 2) Consumer 등록 & 구독 시작
         this.subscription = this.container.receive(
