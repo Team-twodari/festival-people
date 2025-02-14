@@ -14,6 +14,7 @@ import com.wootecam.festivals.docs.utils.RestDocsSupport;
 import com.wootecam.festivals.domain.payment.exception.PaymentErrorCode;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
+import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
 import com.wootecam.festivals.domain.purchase.service.PurchaseFacadeService;
 import com.wootecam.festivals.domain.purchase.service.PurchaseService;
@@ -39,7 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @WebMvcTest(PurchaseController.class)
 @ActiveProfiles("test")
-public class PurchaseControllerTest extends RestDocsSupport {
+class PurchaseControllerTest extends RestDocsSupport {
 
     @Autowired
     WebApplicationContext context;
@@ -256,13 +257,13 @@ public class PurchaseControllerTest extends RestDocsSupport {
         // given
         String paymentId = "payment-123";
         given(purchaseFacadeService.getPaymentStatus(paymentId))
-                .willReturn(PaymentService.PaymentStatus.SUCCESS);
+                .willReturn(PurchaseStatus.PAID);
 
         // when & then
         this.mockMvc.perform(
                         get("/api/v1/festivals/{festivalId}/tickets/{ticketId}/purchase/{paymentId}/status", 1L, 1L, paymentId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.paymentStatus").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("PAID"))
                 .andDo(restDocs.document(
                         responseFields(
                                 beneathPath("data").withSubsectionId("data"),
@@ -272,9 +273,9 @@ public class PurchaseControllerTest extends RestDocsSupport {
     }
 
     @ParameterizedTest
-    @EnumSource(PaymentService.PaymentStatus.class)
+    @EnumSource(PurchaseStatus.class)
     @DisplayName("결제 상태 조회 성공 - 모든 상태")
-    void getPaymentStatus_allStatuses(PaymentService.PaymentStatus status) throws Exception {
+    void getPaymentStatus_allStatuses(PurchaseStatus status) throws Exception {
         // given
         String paymentId = "payment-123";
         given(purchaseFacadeService.getPaymentStatus(paymentId))
