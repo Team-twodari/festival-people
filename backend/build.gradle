@@ -140,8 +140,9 @@ subprojects {
             classDirectories.setFrom(files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
                         '**/QueueApplication.class',
-                        '**/FestivalsApplication.class',  // exclude main class
-                        '**/ScheduleServerApplication.class',  // exclude main class
+                        '**/FestivalsApplication.class',
+                        '**/ScheduleServerApplication.class',
+                        '**/PaymentServerApplication.class',
                         '**/dto/**', // exclude dto package
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
