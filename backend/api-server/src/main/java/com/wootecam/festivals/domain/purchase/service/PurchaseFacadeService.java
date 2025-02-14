@@ -8,6 +8,7 @@ import com.wootecam.festivals.domain.payment.entity.Payment;
 import com.wootecam.festivals.domain.payment.entity.PaymentStatus;
 import com.wootecam.festivals.domain.payment.repository.PaymentRepository;
 import com.wootecam.festivals.domain.payment.service.PaymentRequestEventProducer;
+import com.wootecam.festivals.domain.purchase.dto.PurchaseData;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
@@ -15,7 +16,6 @@ import com.wootecam.festivals.domain.purchase.repository.PurchaseRepository;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.service.TicketCacheService;
 import com.wootecam.festivals.global.exception.type.ApiException;
-import com.wootecam.festivals.domain.purchase.dto.PurchaseData;
 import com.wootecam.festivals.global.utils.TimeProvider;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -37,6 +37,12 @@ public class PurchaseFacadeService {
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
 
+    /**
+     * 구매 요청을 처리합니다.
+     * @param purchaseData 구매 요청 데이터
+     * @return 결제 ID
+     * @throws ApiException 구매가 불가능한 경우 예외 발생
+     */
     @Transactional
     public String processPurchase(PurchaseData purchaseData) {
         validatePurchase(purchaseData);
@@ -47,7 +53,6 @@ public class PurchaseFacadeService {
 
         Payment payment = createInitialPayment(paymentId, savedPurchase);
         paymentRepository.save(payment);
-
 
         paymentRequestEventProducer.sendPaymentEvent(new PaymentRequest(
                 paymentId, purchaseData.memberId(), purchaseData.ticketId(), purchaseData.ticketStockId()));
