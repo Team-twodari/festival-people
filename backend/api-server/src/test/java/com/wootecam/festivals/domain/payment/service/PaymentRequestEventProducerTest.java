@@ -56,19 +56,18 @@ class PaymentRequestEventProducerTest extends SpringBootTestConfig {
     @Test
     @DisplayName("정상적인 payment event 전송 테스트")
     void testSendPaymentEventSuccess() {
-        // given: 테스트용 PaymentRequest 객체 생성 (paymentId가 "testPaymentId")
+        // given
         PaymentRequest paymentRequest = new PaymentRequest("testPaymentId", 1L, 1L, 1L);
 
-        // when: payment event 전송
+        // when
         eventProducer.sendPaymentEvent(paymentRequest);
 
-        // then: Redis 스트림에 메시지가 저장되었는지 검증
+        // then
         List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream()
                 .range(PAYMENT_REQUEST_STREAM_KEY, Range.unbounded());
         assertNotNull(records, "Redis 스트림 조회 결과는 null이면 안됩니다.");
         assertFalse(records.isEmpty(), "Redis 스트림에 저장된 데이터가 있어야 합니다.");
 
-        // 저장된 메시지 중 하나의 값에 paymentId("testPaymentId")가 포함되어 있는지 확인
         Map<Object, Object> messageMap = records.get(0).getValue();
         boolean containsPaymentId = messageMap.values().stream()
                 .anyMatch(value -> value.toString().contains("testPaymentId"));
@@ -90,18 +89,16 @@ class PaymentRequestEventProducerTest extends SpringBootTestConfig {
     @Test
     @DisplayName("JSON 직렬화 실패 시 ApiException 발생 테스트")
     void testSendPaymentEventJsonProcessingException() throws JsonProcessingException {
-        // given: 테스트용 PaymentRequest 객체 생성
+        // given
         PaymentRequest paymentRequest = new PaymentRequest("testPaymentId", 1L, 1L, 1L);
 
-        // ObjectMapper를 스파이하고 writeValueAsString 호출 시 JsonProcessingException을 발생하도록 설정
         ObjectMapper spyObjectMapper = spy(objectMapper);
         doThrow(new JsonProcessingException("Test serialization error") {
         }).when(spyObjectMapper).writeValueAsString(paymentRequest);
 
-        // 스파이한 ObjectMapper를 사용하여 새로운 PaymentRequestEventProducer 생성
         PaymentRequestEventProducer eventProducerWithSpy = new PaymentRequestEventProducer(redisTemplate, spyObjectMapper);
 
-        // when & then: sendPaymentEvent 호출 시 ApiException이 발생하는지 검증
+        // when & then
         ApiException exception = assertThrows(ApiException.class,
                 () -> eventProducerWithSpy.sendPaymentEvent(paymentRequest),
                 "직렬화 오류 발생 시 ApiException이 발생해야 합니다.");
@@ -122,23 +119,20 @@ class PaymentRequestEventProducerTest extends SpringBootTestConfig {
      */
     @Test
     @DisplayName("Redis 전송 실패 (RecordId null) 시 ApiException 발생 테스트")
-    void testSendPaymentEventNullRecordId() throws JsonProcessingException {
-        // given: 테스트용 PaymentRequest 객체 생성
+    void testSendPaymentEventNullRecordId() {
+        // given
         PaymentRequest paymentRequest = new PaymentRequest("testPaymentId", 1L, 1L, 1L);
 
-        // StringRedisTemplate과 StreamOperations를 목(mock) 처리
         StringRedisTemplate mockRedisTemplate = mock(StringRedisTemplate.class);
-        // 실제 ObjectMapper 사용
         ObjectMapper realObjectMapper = objectMapper;
-        // StreamOperations 목(mock) 생성 후, add() 호출 시 null 반환하도록 설정
+
         var mockStreamOps = mock(org.springframework.data.redis.core.StreamOperations.class);
         when(mockRedisTemplate.opsForStream()).thenReturn(mockStreamOps);
         when(mockStreamOps.add(any())).thenReturn(null);
 
-        // 목 처리한 redisTemplate을 사용하여 새로운 PaymentRequestEventProducer 생성
         PaymentRequestEventProducer producerWithNullRecord = new PaymentRequestEventProducer(mockRedisTemplate, realObjectMapper);
 
-        // when & then: sendPaymentEvent 호출 시 ApiException이 발생하는지 검증
+        // when & then
         ApiException exception = assertThrows(ApiException.class,
                 () -> producerWithNullRecord.sendPaymentEvent(paymentRequest),
                 "RecordId가 null인 경우 ApiException이 발생해야 합니다.");
