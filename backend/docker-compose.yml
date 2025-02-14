@@ -28,6 +28,18 @@ services:
     networks:
       - app-network
 
+  payment-server:
+    build:
+      context: ./payment-server
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   schedule-server:
     build:
       context: ./schedule-server

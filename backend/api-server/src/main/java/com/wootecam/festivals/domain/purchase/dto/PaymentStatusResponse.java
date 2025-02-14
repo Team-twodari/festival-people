@@ -1,6 +1,6 @@
 package com.wootecam.festivals.domain.purchase.dto;
 
-import com.wootecam.festivals.domain.payment.service.PaymentService;
+import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 
-public record PaymentStatusResponse(PaymentService.PaymentStatus paymentStatus) {
+public record PaymentStatusResponse(PurchaseStatus paymentStatus) {
 }

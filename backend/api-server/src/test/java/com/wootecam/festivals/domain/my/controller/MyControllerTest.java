@@ -217,7 +217,7 @@ class MyControllerTest extends RestDocsSupport {
         return new MyPurchasedTicketResponse(
                 1L, // purchaseId
                 LocalDateTime.now(), // purchaseTime
-                PurchaseStatus.PURCHASED, // purchaseStatus
+                PurchaseStatus.PAID, // purchaseStatus
                 new TicketWithoutStockResponse(
                         100L, "VIP 티켓", "VIP 좌석", 50000L, 1,
                         LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(30),

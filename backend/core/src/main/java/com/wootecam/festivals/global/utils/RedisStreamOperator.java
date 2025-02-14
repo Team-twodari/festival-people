@@ -65,7 +65,6 @@ public class RedisStreamOperator {
         return false;
     }
 
-
     // RedisOperator :: 기본 StreamMessageListenerContainer 생성
     public StreamMessageListenerContainer<String, ObjectRecord<String, String>> createStreamMessageListenerContainer() {
         return StreamMessageListenerContainer.create(
@@ -75,6 +74,19 @@ public class RedisStreamOperator {
                         .targetType(String.class)
                         .pollTimeout(Duration.ofSeconds(20))
                         .batchSize(10)
+                        .build()
+        );
+    }
+
+    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> createStreamMessageListenerContainer(Integer pollTimeout,
+                                                                                                                     Integer batchSize) {
+        return StreamMessageListenerContainer.create(
+                Objects.requireNonNull(this.redisTemplate.getConnectionFactory()),
+                StreamMessageListenerContainer
+                        .StreamMessageListenerContainerOptions.builder()
+                        .targetType(String.class)
+                        .pollTimeout(Duration.ofSeconds(pollTimeout))
+                        .batchSize(batchSize)
                         .build()
         );
     }

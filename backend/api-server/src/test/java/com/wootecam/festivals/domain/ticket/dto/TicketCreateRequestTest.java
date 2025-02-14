@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @Nested
-@DisplayName("TicketCreateRequest 클래스는")
+@DisplayName("TicketCreateRequest 클래스")
 class TicketCreateRequestTest {
 
     private final Validator validator = buildDefaultValidatorFactory().getValidator();

@@ -73,7 +73,8 @@ public class FestivalParticipantFixture {
                     .member(members.get(i))
                     .ticket(tickets.get(ticketIndex))
                     .purchaseTime(tickets.get(ticketIndex).getStartSaleTime().plusDays(1))
-                    .purchaseStatus(PurchaseStatus.PURCHASED)
+                    .paymentUuid("paymentUuid" + i)
+                    .purchaseStatus(PurchaseStatus.PAID)
                     .build();
 
             purchases.add(purchase);

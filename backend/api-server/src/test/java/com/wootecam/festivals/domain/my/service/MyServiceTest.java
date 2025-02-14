@@ -369,8 +369,9 @@ class MyServiceTest extends SpringBootTestConfig {
                 Purchase.builder()
                         .ticket(ticket)
                         .member(loginMember)
+                        .paymentUuid("paymentUuid")
                         .purchaseTime(LocalDateTime.now())
-                        .purchaseStatus(PurchaseStatus.PURCHASED)
+                        .purchaseStatus(PurchaseStatus.PAID)
                         .build()
         );
     }
@@ -407,7 +408,8 @@ class MyServiceTest extends SpringBootTestConfig {
                             .ticket(ticket)
                             .member(loginMember)
                             .purchaseTime(currentTime.plusDays(2).plusHours(i))
-                            .purchaseStatus(PurchaseStatus.PURCHASED)
+                            .paymentUuid("paymentUuid" + i)
+                            .purchaseStatus(PurchaseStatus.PAID)
                             .build();
                     purchaseRepository.save(purchase);
 

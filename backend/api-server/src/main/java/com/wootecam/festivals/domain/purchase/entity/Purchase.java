@@ -32,6 +32,9 @@ public class Purchase extends BaseEntity {
     @Column(name = "purchase_id")
     private Long id;
 
+    @Column(name = "payment_uuid", nullable = false, unique = true, updatable = false)
+    private String paymentUuid;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false, updatable = false)
     private Ticket ticket;
@@ -48,11 +51,19 @@ public class Purchase extends BaseEntity {
     private PurchaseStatus purchaseStatus;
 
     @Builder
-    private Purchase(Ticket ticket, Member member,
-                     LocalDateTime purchaseTime, PurchaseStatus purchaseStatus) {
+    private Purchase(String paymentUuid,
+                     Ticket ticket,
+                     Member member,
+                     LocalDateTime purchaseTime,
+                     PurchaseStatus purchaseStatus) {
+        this.paymentUuid = Objects.requireNonNull(paymentUuid, "결제 uuid 정보는 필수입니다.");
         this.ticket = Objects.requireNonNull(ticket, "티켓 정보는 필수입니다.");
         this.member = Objects.requireNonNull(member, "회원 정보는 필수입니다.");
         this.purchaseTime = Objects.requireNonNull(purchaseTime, "구매 시간은 필수입니다.");
         this.purchaseStatus = Objects.requireNonNull(purchaseStatus, "구매 상태는 필수입니다.");
+    }
+
+    public void paid() {
+        this.purchaseStatus = PurchaseStatus.PAID;
     }
 }

@@ -93,15 +93,6 @@ public class Ticket extends BaseEntity {
         return Collections.unmodifiableList(ticketStocks);
     }
 
-    public Purchase createPurchase(Member member) {
-        return Purchase.builder()
-                .ticket(this)
-                .member(member)
-                .purchaseTime(LocalDateTime.now())
-                .purchaseStatus(PurchaseStatus.PURCHASED)
-                .build();
-    }
-
     public boolean isSaleOnTime(LocalDateTime now) {
         return (startSaleTime.isEqual(now) || startSaleTime.isBefore(now)) && (endSaleTime.isEqual(now)
                 || endSaleTime.isAfter(now));

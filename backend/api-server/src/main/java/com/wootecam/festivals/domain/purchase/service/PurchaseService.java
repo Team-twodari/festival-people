@@ -2,6 +2,7 @@ package com.wootecam.festivals.domain.purchase.service;
 
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.member.repository.MemberRepository;
+import com.wootecam.festivals.domain.payment.entity.Payment;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
@@ -81,11 +82,9 @@ public class PurchaseService {
 
         Member member = memberRepository.getReferenceById(loginMemberId);
         validFirstTicketPurchase(ticket, member);
-
         validFirstTicketStockReservation(ticket, member);
 
         Optional<TicketStock> optionalTicketStock = getTicketStockForUpdate(ticket);
-
         if (optionalTicketStock.isEmpty() || optionalTicketStock.get().isReserved()) {
             return new PurchasableResponse(false, null);
         }
