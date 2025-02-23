@@ -67,7 +67,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
         // JWT 생성 및 응답 헤더에 추가
         String jwtToken = jwtProvider.generateToken(authentication.memberId());
-        response.getHeaders().add("Set-Cookie", "WebSocket-Token=" + jwtToken + "; Path=/; HttpOnly; Secure");
+        response.getHeaders().add("Authorization", jwtToken);
 
         log.info("WebSocket 인증 성공: {}", authentication);
 
