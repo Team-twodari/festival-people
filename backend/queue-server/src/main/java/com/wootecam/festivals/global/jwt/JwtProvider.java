@@ -5,6 +5,7 @@ import com.wootecam.festivals.global.exception.WebSocketException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Jwts.SIG;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
@@ -28,12 +29,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtProvider {
 
-    private static final long ACCESS_TOKEN_VALIDITY = 60 * 60 * 1000L; // 1시간
+    public static final long ACCESS_TOKEN_VALIDITY = 5 * 60 * 1000L; // 5분
 
     @Value("${jwt.secret}")
     private String secretKey;
 
     private SecretKey key;
+
 
     @PostConstruct
     public void init() {
@@ -41,18 +43,20 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+
     /**
-     * JWT 액세스 토큰 생성.
+     * JWT 액세스 토큰 생성 (유효시간 설정 가능)
      *
-     * @param memberId 사용자 ID
+     * @param memberId       사용자 ID
+     * @param validityMillis 토큰 유효 시간 (밀리초 단위)
      * @return JWT 액세스 토큰
      */
-    public String generateToken(Long memberId) {
+    public String generateToken(Long memberId, long validityMillis) {
         return Jwts.builder()
                 .subject(String.valueOf(memberId))
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_VALIDITY))
-                .signWith(key)
+                .expiration(new Date(System.currentTimeMillis() + validityMillis)) // 유효 시간 동적 설정
+                .signWith(this.key, SIG.HS256)
                 .compact();
     }
 

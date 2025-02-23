@@ -1,5 +1,7 @@
 package com.wootecam.festivals.global.auth.interceptor;
 
+import static com.wootecam.festivals.global.jwt.JwtProvider.ACCESS_TOKEN_VALIDITY;
+
 import com.wootecam.festivals.global.auth.Authentication;
 import com.wootecam.festivals.global.jwt.JwtProvider;
 import com.wootecam.festivals.global.utils.AuthenticationUtils;
@@ -66,7 +68,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         }
 
         // JWT 생성 및 응답 헤더에 추가
-        String jwtToken = jwtProvider.generateToken(authentication.memberId());
+        String jwtToken = jwtProvider.generateToken(authentication.memberId(), ACCESS_TOKEN_VALIDITY);
         response.getHeaders().add("Authorization", jwtToken);
 
         log.info("WebSocket 인증 성공: {}", authentication);
