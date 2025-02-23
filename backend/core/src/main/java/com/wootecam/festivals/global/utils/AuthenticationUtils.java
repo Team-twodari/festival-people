@@ -28,6 +28,6 @@ public final class AuthenticationUtils {
         HttpSession session = getSession();
         logger.debug("Authentication set: {}", authentication);
 
-        session.setAttribute("AUTHENTICATION", authentication);
+        session.setAttribute(AUTHENTICATION, authentication);
     }
 }
