@@ -3,6 +3,8 @@ package com.wootecam.festivals.global.auth;
 import static com.wootecam.festivals.global.jwt.JwtProvider.ACCESS_TOKEN_VALIDITY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.wootecam.festivals.global.exception.WebSocketException;
 import com.wootecam.festivals.global.jwt.JwtProvider;
@@ -96,12 +98,72 @@ class WebSocketAuthArgumentResolverTest extends SpringBootTestConfig {
      * 1초 전에 만료된 JWT를 생성하는 메서드.
      *
      * @param memberId 사용자 ID
-     * @return 5초 전에 만료된 JWT
+     * @return 1초 전에 만료된 JWT
      */
     private String createExpiredToken(Long memberId) {
-        // 현재 시간보다 5초 전에 만료된 JWT 생성
         return jwtProvider.generateToken(memberId, -1000L);
     }
 
-}
+    // --------------- supportsParameter() 메서드 테스트 ---------------
 
+    @Test
+    @DisplayName("@AuthUser 어노테이션이 있고 Long 타입이면 true를 반환한다.")
+    void supportsParameter_withAuthUserAndLongType_returnsTrue() {
+        // Given
+        MethodParameter mockParameter = mock(MethodParameter.class);
+        when(mockParameter.hasParameterAnnotation(AuthUser.class)).thenReturn(true);
+        when(mockParameter.getParameterType()).thenReturn((Class) Long.class);
+
+        // When
+        boolean result = resolver.supportsParameter(mockParameter);
+
+        // Then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("@AuthUser 어노테이션이 없으면 false를 반환한다.")
+    void supportsParameter_withoutAuthUserAnnotation_returnsFalse() {
+        // Given
+        MethodParameter mockParameter = mock(MethodParameter.class);
+        when(mockParameter.hasParameterAnnotation(AuthUser.class)).thenReturn(false);
+        when(mockParameter.getParameterType()).thenReturn((Class) Long.class);
+
+        // When
+        boolean result = resolver.supportsParameter(mockParameter);
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Long 타입이 아니면 false를 반환한다.")
+    void supportsParameter_withNonLongType_returnsFalse() {
+        // Given
+        MethodParameter mockParameter = mock(MethodParameter.class);
+        when(mockParameter.hasParameterAnnotation(AuthUser.class)).thenReturn(true);
+        when(mockParameter.getParameterType()).thenReturn((Class) String.class);
+
+        // When
+        boolean result = resolver.supportsParameter(mockParameter);
+
+        // Then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Long 타입이고 @AuthUser가 있으면 true를 반환한다.")
+    void supportsParameter_withLongTypeAndAuthUser_returnsTrue() {
+        // Given
+        MethodParameter mockParameter = mock(MethodParameter.class);
+        when(mockParameter.hasParameterAnnotation(AuthUser.class)).thenReturn(true);
+        when(mockParameter.getParameterType()).thenReturn((Class) Long.class);
+
+        // When
+        boolean result = resolver.supportsParameter(mockParameter);
+
+        // Then
+        assertThat(result).isTrue();
+    }
+
+}
