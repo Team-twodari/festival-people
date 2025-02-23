@@ -1,6 +1,7 @@
 package com.wootecam.festivals.global.auth.interceptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.wootecam.festivals.global.auth.Authentication;
 import com.wootecam.festivals.global.jwt.JwtProvider;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -73,7 +75,6 @@ class WebSocketAuthInterceptorTest extends SpringBootTestConfig {
             assertThat(authHeaders).isNotEmpty();
         }
 
-
         @Test
         @DisplayName("인증되지 않은 사용자는 WebSocket 연결이 거부된다.")
         void it_denies_unauthenticated_user() throws Exception {
@@ -89,6 +90,22 @@ class WebSocketAuthInterceptorTest extends SpringBootTestConfig {
 
             // When
             boolean result = interceptor.beforeHandshake(request, response, null, attributes);
+
+            // Then
+            assertThat(result).isFalse();
+            assertThat(response.getServletResponse().getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        @Test
+        @DisplayName("request가 ServletServerHttpRequest가 아닐 때 WebSocket 연결이 거부된다.")
+        void it_denies_non_http_request() throws Exception {
+            // Given: ServerHttpRequest의 Mock 객체 생성
+            ServerHttpRequest nonHttpRequest = mock(ServerHttpRequest.class); // Mock 객체 사용
+            ServletServerHttpResponse response = new ServletServerHttpResponse(new MockHttpServletResponse());
+            Map<String, Object> attributes = new HashMap<>();
+
+            // When
+            boolean result = interceptor.beforeHandshake(nonHttpRequest, response, null, attributes);
 
             // Then
             assertThat(result).isFalse();
