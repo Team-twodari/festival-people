@@ -3,6 +3,7 @@ package com.wootecam.festivals.global.auth.interceptor;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wootecam.festivals.global.auth.Authentication;
+import com.wootecam.festivals.global.jwt.JwtProvider;
 import com.wootecam.festivals.global.utils.AuthenticationUtils;
 import com.wootecam.festivals.utils.SpringBootTestConfig;
 import java.util.HashMap;
@@ -28,6 +29,9 @@ class WebSocketAuthInterceptorTest extends SpringBootTestConfig {
     @Autowired
     private WebSocketAuthInterceptor interceptor;
 
+    @Autowired
+    private JwtProvider jwtProvider;
+
     private MockHttpSession session;
 
     @BeforeEach
@@ -40,7 +44,7 @@ class WebSocketAuthInterceptorTest extends SpringBootTestConfig {
     class Describe_beforeHandshake {
 
         @Test
-        @DisplayName("인증된 사용자는 WebSocket 연결을 허용하고 JWT가 Set-Cookie로 반환된다.")
+        @DisplayName("인증된 사용자는 WebSocket 연결을 허용하고 JWT가 Authorization 헤더에 반환된다.")
         void it_allows_authenticated_user() throws Exception {
             // Given: 인증 정보를 세션에 추가
             Authentication authentication = new Authentication(1L);
@@ -61,18 +65,12 @@ class WebSocketAuthInterceptorTest extends SpringBootTestConfig {
             // Then: 인증이 성공하여 핸드셰이크가 허용됨
             assertThat(result).isTrue();
 
-            // Set-Cookie 헤더에 JWT가 포함되었는지 확인
-            assertThat(response.getHeaders()).containsKey("Set-Cookie");
+            // Authorization 헤더에 JWT가 포함되었는지 확인
+            assertThat(response.getHeaders()).containsKey("Authorization");
 
-            // Set-Cookie 헤더 값 확인 (JWT 토큰이 포함되었는지 검증)
-            List<String> setCookieHeaders = response.getHeaders().get("Set-Cookie");
-            assertThat(setCookieHeaders).isNotEmpty();
-
-            // JWT 토큰이 있는지 확인 (WebSocket-Token= 으로 시작하는 값이 있는지 체크)
-            boolean hasJwtToken = setCookieHeaders.stream()
-                    .anyMatch(cookie -> cookie.startsWith("WebSocket-Token="));
-
-            assertThat(hasJwtToken).isTrue();
+            // Authorization 헤더 값 확인 (JWT 토큰이 포함되었는지 검증)
+            List<String> authHeaders = response.getHeaders().get("Authorization");
+            assertThat(authHeaders).isNotEmpty();
         }
 
 
