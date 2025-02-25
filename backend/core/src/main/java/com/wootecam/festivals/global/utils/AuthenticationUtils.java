@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 public final class AuthenticationUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationUtils.class);
+    public static final String AUTHENTICATION = "authentication";
 
     private AuthenticationUtils() {
     }
@@ -18,7 +19,7 @@ public final class AuthenticationUtils {
     public static Authentication getAuthentication() {
         HttpSession session = getExistSession();
         if (session != null) {
-            return (Authentication) session.getAttribute("authentication");
+            return (Authentication) session.getAttribute(AUTHENTICATION);
         }
         return null;
     }
@@ -27,6 +28,6 @@ public final class AuthenticationUtils {
         HttpSession session = getSession();
         logger.debug("Authentication set: {}", authentication);
 
-        session.setAttribute("authentication", authentication);
+        session.setAttribute(AUTHENTICATION, authentication);
     }
 }
