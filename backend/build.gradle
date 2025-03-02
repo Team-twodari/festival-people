@@ -139,10 +139,13 @@ subprojects {
         afterEvaluate {
             classDirectories.setFrom(files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
+                        //spring boot application class
                         '**/QueueApplication.class',
                         '**/FestivalsApplication.class',
                         '**/ScheduleServerApplication.class',
                         '**/PaymentServerApplication.class',
+                        '**/QueueManagerApplication.class',
+
                         '**/dto/**', // exclude dto package
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
@@ -215,6 +218,12 @@ project(':queue-server') {
 }
 
 project('payment-server') {
+    dependencies {
+        implementation project(':core')
+    }
+}
+
+project('queue-manager-server') {
     dependencies {
         implementation project(':core')
     }

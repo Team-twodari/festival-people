@@ -5,3 +5,5 @@ include 'api-server'
 include 'payment-server'
 include 'schedule-server'
 include 'e2e'
+include 'queue-manager-server'
+
