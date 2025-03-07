@@ -86,6 +86,7 @@ public class FestivalSchedulerService {
                     .usingJobData("festivalId", festivalId)
                     .usingJobData("festivalStatus", status.name())
                     .storeDurably(false)
+                    .requestRecovery(true)
                     .build();
 
             int priority = eventType.equals("시작") ? 100 : 5;

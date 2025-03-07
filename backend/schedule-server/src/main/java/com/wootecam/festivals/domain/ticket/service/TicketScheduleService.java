@@ -45,6 +45,7 @@ public class TicketScheduleService {
                     .withIdentity(jobKey, "ticketGroup")
                     .usingJobData("ticket", ticketToJson)
                     .storeDurably(false)
+                    .requestRecovery(true)
                     .build();
 
             LocalDateTime scheduleTime = ticket.startSaleTime().minusMinutes(10);
