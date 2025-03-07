@@ -52,7 +52,7 @@ public class TicketScheduleService {
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity(triggerKey, "ticketGroup")
                     .startAt(java.sql.Timestamp.valueOf(scheduleTime))
-                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionIgnoreMisfires())
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
                     .build();
 
             if (scheduler.checkExists(jobDetail.getKey())) {
