@@ -30,7 +30,7 @@ spring:
           useProperties: false
           dataSource: schedule
           isClustered: true
-          misfireThreshold: 30000
+          misfireThreshold: 1000
           clusterCheckinInterval: 10000
           tablePrefix: QRTZ_ # Quartz 테이블 이름 접두사
         dataSource:
