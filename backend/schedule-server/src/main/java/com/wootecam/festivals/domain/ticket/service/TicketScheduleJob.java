@@ -10,6 +10,7 @@ import com.wootecam.festivals.global.exception.GlobalErrorCode;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@DisallowConcurrentExecution
 public class TicketScheduleJob implements Job {
 
     private final TicketInfoRedisRepository ticketInfoRedisRepository;
