@@ -146,7 +146,6 @@ subprojects {
                         '**/PaymentServerApplication.class',
                         '**/QueueManagerApplication.class',
 
-
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
                         '**/global/auth/**', // exclude auth package
@@ -161,7 +160,6 @@ subprojects {
                         '**/exception/**',
 
                         '**/domain/purchase/repository/**',
-                        '**/domain/queue/repository/**',
                         "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
                         "**/*Producer.*" // exclude Producer class
                 ])
