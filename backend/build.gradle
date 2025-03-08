@@ -161,6 +161,7 @@ subprojects {
                         '**/exception/**',
 
                         '**/domain/purchase/repository/**',
+                        '**/domain/queue/repository/**',
                         "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
                         "**/*Producer.*" // exclude Producer class
                 ])

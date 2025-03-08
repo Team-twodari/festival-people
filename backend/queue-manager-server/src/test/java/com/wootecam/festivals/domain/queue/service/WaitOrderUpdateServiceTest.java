@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +42,7 @@ class WaitOrderUpdateServiceTest {
     }
 
     @Test
+    @DisplayName("현재 판매 중인 티켓만 대기열 범위 갱신할 수 있다")
     void updateWaitOrders_updatesEligibleWaitOrders() {
         // Given
         TicketInfoWithId ticket1 = new TicketInfoWithId(1L, null, null);
@@ -66,6 +68,7 @@ class WaitOrderUpdateServiceTest {
     }
 
     @Test
+    @DisplayName("현재 판매 중인 티켓이 없으면 대기열 범위를 갱신하지 않는다")
     void updateWaitOrders_doesNotUpdateIfNotEligible() {
         // Given
         TicketInfoWithId ticket1 = new TicketInfoWithId(1L, null, null);
