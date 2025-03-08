@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wootecam.festivals.domain.queue.dto.UpdateWaitOrder;
 import com.wootecam.festivals.domain.queue.dto.WaitOrder;
 import com.wootecam.festivals.domain.ticket.entity.TicketInfoWithId;
-import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository;
 import com.wootecam.festivals.global.utils.TimeProvider;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -33,16 +32,10 @@ class RedisWaitOrderListRepositoryTest {
     private RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
     private TimeProvider timeProvider;
-
-    @Autowired
-    private TicketInfoRedisRepository ticketInfoRedisRepository;
 
     private RedisWaitOrderListRepository repository;
 
@@ -90,5 +83,23 @@ class RedisWaitOrderListRepositoryTest {
         assertNotNull(storedValue);
         WaitOrder storedOrder = objectMapper.readValue(storedValue, WaitOrder.class);
         assertEquals(600, storedOrder.waitOrder());
+    }
+
+    @Test
+    @DisplayName("주어진 티켓 id가 없으면 대기열 순번을 갱신하지 않는다")
+    void doesNotUpdateIfTicketIdNonExist() throws JsonProcessingException {
+        // Given
+        WaitOrder waitOrder = new WaitOrder(500, 10000L);
+        String jsonValue = objectMapper.writeValueAsString(waitOrder);
+        hashOperations.put(RedisWaitOrderListRepository.WAIT_ORDER_LIST_KEY, "tickets:1", jsonValue);
+
+        // When
+        repository.updateWaitOrderListBulk(Collections.EMPTY_MAP);
+
+        // Then
+        String storedValue = hashOperations.get(RedisWaitOrderListRepository.WAIT_ORDER_LIST_KEY, "tickets:1");
+        assertNotNull(storedValue);
+        WaitOrder storedOrder = objectMapper.readValue(storedValue, WaitOrder.class);
+        assertEquals(500, storedOrder.waitOrder());
     }
 }

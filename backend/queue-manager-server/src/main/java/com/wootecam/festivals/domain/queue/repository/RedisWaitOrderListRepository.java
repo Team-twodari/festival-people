@@ -60,9 +60,6 @@ public class RedisWaitOrderListRepository {
         List<UpdateWaitOrder> result = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
             String value = values.get(i);
-            if (value == null) {
-                continue;
-            }
 
             try {
                 WaitOrder waitOrder = mapper.readValue(value, WaitOrder.class);
