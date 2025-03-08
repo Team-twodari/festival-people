@@ -3,7 +3,6 @@ package com.wootecam.festivals.domain.ticket.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wootecam.festivals.domain.festival.dto.TicketResponse;
-import com.wootecam.festivals.domain.ticket.repository.TicketRepository;
 import com.wootecam.festivals.global.exception.GlobalErrorCode;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import java.time.LocalDateTime;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 public class TicketScheduleService {
 
     private final Scheduler scheduler;
-    private final TicketRepository ticketRepository;
     private final ObjectMapper objectMapper;
 
     /**
