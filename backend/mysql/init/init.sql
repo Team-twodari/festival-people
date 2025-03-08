@@ -1,3 +1,8 @@
+CREATE DATABASE IF NOT EXISTS `twodari`;
+CREATE DATABASE IF NOT EXISTS `schedule`;
+
+USE`twodari`;
+
 create table if not exists twodari.checkin
 (
     is_checked
@@ -237,11 +242,7 @@ create table if not exists twodari.ticket_stock
 create unique index ticket_stock_ticket_id_ticket_stock_member_id_index
     on twodari.ticket_stock (ticket_id, ticket_stock_member_id);
 
-
-CREATE
-DATABASE IF NOT EXISTS schedule;
-USE
-schedule;
+USE `schedule`;
 
 CREATE TABLE IF NOT EXISTS QRTZ_JOB_DETAILS
 (
