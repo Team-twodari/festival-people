@@ -3,6 +3,7 @@ package com.wootecam.festivals.domain.ticket.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wootecam.festivals.domain.festival.dto.TicketResponse;
+import com.wootecam.festivals.domain.queue.repository.RedisWaitOrderListRepository;
 import com.wootecam.festivals.domain.ticket.repository.CurrentTicketWaitRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketStockCountRedisRepository;
@@ -22,6 +23,7 @@ public class TicketScheduleJob implements Job {
     private final TicketInfoRedisRepository ticketInfoRedisRepository;
     private final TicketStockCountRedisRepository ticketStockCountRedisRepository;
     private final CurrentTicketWaitRedisRepository currentTicketWaitRedisRepository;
+    private final RedisWaitOrderListRepository waitOrderListRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -30,9 +32,11 @@ public class TicketScheduleJob implements Job {
         try {
             String ticketToJson = jobExecutionContext.getJobDetail().getJobDataMap().getString("ticket");
             TicketResponse ticket = objectMapper.readValue(ticketToJson, TicketResponse.class);
+
             ticketInfoRedisRepository.setTicketInfo(ticket.id(), ticket.startSaleTime(), ticket.endSaleTime());
             ticketStockCountRedisRepository.setTicketStockCount(ticket.id(), ticket.remainStock());
-            currentTicketWaitRedisRepository.addCurrentTicketWait(ticket.id());
+            waitOrderListRepository.initializeWaitOrderList(ticket.id());
+            currentTicketWaitRedisRepository.addCurrentTicketWait(ticket.id()); // todo: 대기열 시스템 변경 후 삭제
 
             log.info("티켓 정보 업데이트 스케줄러 실행 완료 - 티켓 ID: {}, 판매 시작 시각: {}, 판매 종료 시각: {}, 남은 재고: {}", ticket.id(),
                     ticket.startSaleTime(), ticket.endSaleTime(), ticket.remainStock());
