@@ -2,7 +2,6 @@ package com.wootecam.festivals.domain.purchase.service;
 
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.member.repository.MemberRepository;
-import com.wootecam.festivals.domain.payment.entity.Payment;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
@@ -15,7 +14,6 @@ import com.wootecam.festivals.domain.ticket.repository.TicketRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketStockRepository;
 import com.wootecam.festivals.global.auth.purchase.PurchaseSession;
 import com.wootecam.festivals.global.exception.type.ApiException;
-import com.wootecam.festivals.global.utils.TimeProvider;
 import com.wootecam.festivals.global.utils.UuidProvider;
 import jakarta.persistence.PersistenceException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -24,7 +22,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,17 +33,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PurchaseService {
 
-    @Value("${purchase.session.ttl:5}")
-    private Long purchaseSessionTtl;
-
     private final PurchaseRepository purchaseRepository;
     private final TicketStockRepository ticketStockRepository;
     private final MemberRepository memberRepository;
     private final TicketRepository ticketRepository;
-    private final TimeProvider timeProvider;
     private final UuidProvider uuidProvider;
-    private final RedisTemplate<String, String> redisTemplate;
     private final PurchaseSessionRedisRepository purchaseSessionRedisRepository;
+    @Value("${purchase.session.ttl:5}")
+    private Long purchaseSessionTtl;
 
     /**
      * 티켓 구매 권한이 유효한지 확인합니다.
