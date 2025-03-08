@@ -75,12 +75,6 @@ public class RedisWaitOrderListRepository {
         return result;
     }
 
-    public void updateWaitOrderList(Long festivalId, Integer newWaitOrder) throws JsonProcessingException {
-        String value = formatValue(newWaitOrder);
-
-        hashOperations.put(WAIT_ORDER_LIST_KEY, formatField(festivalId), value);
-    }
-
     public void updateWaitOrderListBulk(Map<Long, Integer> updates) {
         // Serialize to Json
         Map<String, String> formattedUpdates = updates.entrySet().stream()

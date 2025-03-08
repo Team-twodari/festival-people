@@ -43,6 +43,10 @@ public class WaitOrderUpdateService {
             }
         }
 
+        if (updateTickets.isEmpty()) {
+            log.warn("No valid wait orders to update in bulk");
+            return;
+        }
         waitOrderListRepository.updateWaitOrderListBulk(updateTickets);
         log.info("Updated Wait order.");
     }

@@ -146,21 +146,22 @@ subprojects {
                         '**/PaymentServerApplication.class',
                         '**/QueueManagerApplication.class',
 
-                        '**/dto/**', // exclude dto package
+
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
                         '**/global/auth/**', // exclude auth package
                         '**/global/constants/**', // exclude constants package
                         '**/global/config/**', // exclude config package
                         '**/global/docs/**', // exclude docs package
-                        '**/global/exception/**', // exclude exception package
-                        '**/global/utils/**', // exclude utils package
-                        '**/utils/**', // exclude utils package
-                        '**/domain/purchase/exception/**',
-                        '**/domain/purchase/repository/**',
-                        '**/global/log/**', // exclude utils package
-                        "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
+                        '**/global/log/**',
                         "**/config/**",  // exclude config package
+
+                        '**/dto/**',
+                        '**/utils/**',
+                        '**/exception/**',
+
+                        '**/domain/purchase/repository/**',
+                        "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
                         "**/*Producer.*" // exclude Producer class
                 ])
             }))
