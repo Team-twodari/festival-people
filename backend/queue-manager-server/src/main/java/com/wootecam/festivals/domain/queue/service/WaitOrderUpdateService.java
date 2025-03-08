@@ -1,13 +1,13 @@
 package com.wootecam.festivals.domain.queue.service;
 
-import static com.wootecam.festivals.global.utils.TimeProvider.KTC_ZONE;
-
 import com.wootecam.festivals.domain.queue.dto.UpdateWaitOrder;
 import com.wootecam.festivals.domain.queue.repository.RedisWaitOrderListRepository;
-import com.wootecam.festivals.domain.ticket.entity.TicketInfo;
+import com.wootecam.festivals.domain.ticket.entity.TicketInfoWithId;
 import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository;
 import com.wootecam.festivals.global.utils.TimeProvider;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,31 +28,26 @@ public class WaitOrderUpdateService {
 
     @Scheduled(fixedRate = 5000)
     public void updateWaitOrders() {
-        List<UpdateWaitOrder> waitOrders = waitOrderListRepository.getAllWaitOrder();
-        log.info("wait order list: " + waitOrders.toString());
+        // 현재 판매 중인 티켓의 대기열 진입 범위 조회
+        List<TicketInfoWithId> ticketsWithSaleStarted = ticketInfoRedisRepository.getTicketsWithSaleStarted();
+        List<UpdateWaitOrder> waitOrders = waitOrderListRepository.getAllIn(ticketsWithSaleStarted);
+        log.info("wait order list: {}", waitOrders.toString());
 
+        // 대기열 진입 범위 갱신
         long currentTime = timeProvider.getCurrentTimeInMilli();
+        Map<Long, Integer> updateTickets = new HashMap<>();
         for (UpdateWaitOrder wo : waitOrders) {
             if (isUpdatable(wo, currentTime)) {
                 Integer newWaitOrder = wo.waitOrder() + INCREMENT_VALUE;
-                try {
-                    waitOrderListRepository.updateWaitOrderList(wo.ticketId(), newWaitOrder);
-                    log.info("Updated Wait order successfully: ticket:" + wo.ticketId()
-                            + ", newWaitOrder: " + newWaitOrder);
-                } catch (Exception e) {
-                    log.error("Cannot update wait order: ticket: " + wo.ticketId() + ", newWaitOrder: "
-                            + newWaitOrder, e);
-                }
+                updateTickets.put(wo.ticketId(), newWaitOrder);
             }
         }
+
+        waitOrderListRepository.updateWaitOrderListBulk(updateTickets);
+        log.info("Updated Wait order.");
     }
 
     private boolean isUpdatable(UpdateWaitOrder waitOrder, long currentTime) {
-        TicketInfo ticketInfo = ticketInfoRedisRepository.getTicketInfo(waitOrder.ticketId());
-        long startMilliTime = ticketInfo.startSaleTime().toInstant(KTC_ZONE).toEpochMilli();
-        long endMilliTime = ticketInfo.endSaleTime().toInstant(KTC_ZONE).toEpochMilli();
-
-        return startMilliTime <= currentTime && currentTime <= endMilliTime
-                && currentTime - waitOrder.updatedAt() >= UPDATE_THRESHOLD;
+        return currentTime - waitOrder.updatedAt() >= UPDATE_THRESHOLD;
     }
 }

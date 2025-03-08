@@ -34,7 +34,7 @@ public class RedisWaitOrderListRepository {
     }
 
     private String formatWaitOrderListKey(Long ticketId) {
-        return "ticket:" + ticketId;
+        return "tickets:" + ticketId;
     }
 
     private String formatWaitOrderListValue(Integer newWaitOrder) throws JsonProcessingException {
