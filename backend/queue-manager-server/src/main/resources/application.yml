@@ -1,0 +1,69 @@
+spring:
+  profiles:
+    active: local
+  session:
+    store-type: redis
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+
+logging:
+  level:
+    org.hibernate.SQL: off
+    com.wootecam.festivals: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+server:
+  port: 8084
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  data:
+    redis:
+      host: ${secret-redis.host}
+      port: ${secret-redis.port}
+      password: ${secret-redis.password}
+    task:
+      execution:
+        pool:
+          core-size: 15
+          max-size: 50
+          queue-capacity: 2000
+
+logging:
+  level:
+    org.hibernate.SQL: off
+    com.wootecam.festivals: error
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: off
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ""
+
+logging:
+  level:
+    com.wootecam.festivals: debug

@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active:
+      test
+  data:
+    redis:
+      host: localhost
+      port: 6378
+      password: ""
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.wootecam.festivals: debug
+

@@ -1,3 +1,8 @@
+CREATE DATABASE IF NOT EXISTS `twodari`;
+CREATE DATABASE IF NOT EXISTS `schedule`;
+
+USE`twodari`;
+
 create table if not exists twodari.checkin
 (
     is_checked
@@ -55,8 +60,7 @@ create table if not exists twodari.festival
 (
     6
 ) not null,
-    festival_id bigint auto_increment
-    primary key,
+    festival_id bigint auto_increment primary key,
     festival_start_time datetime
 (
     6
@@ -122,12 +126,52 @@ create table if not exists twodari.member
 (
     255
 ) null,
-    constraint UKmbmcqelty0fbrvxp1q58dn57t
-    unique
+    constraint UKmbmcqelty0fbrvxp1q58dn57t unique
 (
     email
 )
     );
+
+create table if not exists twodari.payment
+(
+    payment_id
+    bigint
+    auto_increment
+    primary
+    key,
+    payment_uuid
+    varchar
+(
+    255
+) not null unique,
+    payment_time datetime
+(
+    6
+) not null,
+    payment_status enum
+(
+    'INITIATED',
+    'IN_PROGRESS',
+    'SUCCESS',
+    'FAILED_CLIENT',
+    'FAILED_SERVER'
+) not null,
+    created_at datetime
+(
+    6
+) not null,
+    updated_at datetime
+(
+    6
+) not null,
+    purchase_id bigint not null
+    );
+
+create index payment_purchase_id_index
+    on twodari.payment (purchase_id);
+
+create index payment_payment_uuid_index
+    on twodari.payment (payment_uuid);
 
 create table if not exists twodari.purchase
 (
@@ -137,8 +181,11 @@ create table if not exists twodari.purchase
     6
 ) not null,
     member_id bigint not null,
-    purchase_id bigint auto_increment
-    primary key,
+    purchase_id bigint auto_increment primary key,
+    payment_uuid varchar
+(
+    255
+),
     purchase_time datetime
 (
     6
@@ -150,7 +197,9 @@ create table if not exists twodari.purchase
 ) not null,
     purchase_status enum
 (
-    'PURCHASED',
+    'INITIATED',
+    'PAID',
+    'CANCELED',
     'REFUNDED'
 ) not null
     );
@@ -160,6 +209,9 @@ create index purchase_member_id_index
 
 create index purchase_ticket_id_index
     on twodari.purchase (ticket_id);
+
+create index purchase_payment_uuid_index
+    on twodari.purchase (payment_uuid);
 
 create table if not exists twodari.ticket
 (
@@ -237,11 +289,7 @@ create table if not exists twodari.ticket_stock
 create unique index ticket_stock_ticket_id_ticket_stock_member_id_index
     on twodari.ticket_stock (ticket_id, ticket_stock_member_id);
 
-
-CREATE
-DATABASE IF NOT EXISTS schedule;
-USE
-schedule;
+USE `schedule`;
 
 CREATE TABLE IF NOT EXISTS QRTZ_JOB_DETAILS
 (

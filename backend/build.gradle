@@ -122,13 +122,25 @@ subprojects {
         afterEvaluate {
             classDirectories.setFrom(files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
+                        //spring boot application class
                         '**/QueueApplication.class',
-                        '**/FestivalsApplication.class', // exclude main class
+                        '**/FestivalsApplication.class',
+                        '**/ScheduleServerApplication.class',
+                        '**/PaymentServerApplication.class',
+                        '**/QueueManagerApplication.class',
+
                         '**/global/audit/**', // exclude audit package
-                        '**/dto/**', // exclude dto package
-                        '**/global/exception/**', // exclude exception package
                         '**/global/api/**', // exclude api package
+                        '**/global/auth/**', // exclude auth package
+                        '**/global/constants/**', // exclude constants package
                         '**/global/config/**', // exclude config package
+                        '**/global/docs/**', // exclude docs package
+                        '**/global/log/**',
+                        "**/config/**",  // exclude config package
+
+                        '**/dto/**',
+                        '**/utils/**',
+                        '**/exception/**',
                 ])
             }))
         }
@@ -139,25 +151,27 @@ subprojects {
         afterEvaluate {
             classDirectories.setFrom(files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
+                        //spring boot application class
                         '**/QueueApplication.class',
                         '**/FestivalsApplication.class',
                         '**/ScheduleServerApplication.class',
                         '**/PaymentServerApplication.class',
-                        '**/dto/**', // exclude dto package
+                        '**/QueueManagerApplication.class',
+
                         '**/global/audit/**', // exclude audit package
                         '**/global/api/**', // exclude api package
                         '**/global/auth/**', // exclude auth package
                         '**/global/constants/**', // exclude constants package
                         '**/global/config/**', // exclude config package
                         '**/global/docs/**', // exclude docs package
-                        '**/global/exception/**', // exclude exception package
-                        '**/global/utils/**', // exclude utils package
-                        '**/utils/**', // exclude utils package
-                        '**/domain/purchase/exception/**',
-                        '**/domain/purchase/repository/**',
-                        '**/global/log/**', // exclude utils package
-                        "**/service/TicketService.class'", // 테스트 버그로 인해 임시 제외,
+                        '**/global/log/**',
                         "**/config/**",  // exclude config package
+
+                        '**/dto/**',
+                        '**/utils/**',
+                        '**/exception/**',
+
+                        '**/domain/purchase/repository/**',
                         "**/*Producer.*" // exclude Producer class
                 ])
             }))
@@ -215,6 +229,12 @@ project(':queue-server') {
 }
 
 project('payment-server') {
+    dependencies {
+        implementation project(':core')
+    }
+}
+
+project('queue-manager-server') {
     dependencies {
         implementation project(':core')
     }

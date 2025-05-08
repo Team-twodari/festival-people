@@ -41,7 +41,6 @@ public class FestivalSchedulerService {
                 .orElseThrow(() -> new ApiException(FESTIVAL_NOT_FOUND));
 
         log.debug("Festival 스케줄링 - ID: {}", festival.getId());
-        log.debug("현재 시간 : {}", LocalDateTime.now());
         log.debug("시작 시간 : {}", festival.getStartTime());
         log.debug("종료 시간 : {}", festival.getEndTime());
 

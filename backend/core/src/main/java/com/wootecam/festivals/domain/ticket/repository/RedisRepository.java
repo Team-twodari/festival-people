@@ -8,8 +8,6 @@ public abstract class RedisRepository {
 
     public final String TICKETS_PREFIX = "tickets:";
     public final String TICKET_STOCK_COUNT_PREFIX = "ticketStocks:count";
-    public final String TICKET_INFO_START_SALE_TIME_PREFIX = "startSaleTime";
-    public final String TICKET_INFO_END_SALE_TIME_PREFIX = "endSaleTime";
 
     protected final RedisTemplate<String, String> redisTemplate;
 }
