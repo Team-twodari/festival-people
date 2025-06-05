@@ -31,6 +31,9 @@ class WaitOrderUpdateServiceTest {
     private TicketInfoRedisRepository ticketInfoRedisRepository;
 
     @Mock
+    private PassOrderEventProducer passOrderEventProducer;
+
+    @Mock
     private TimeProvider timeProvider;
 
     @InjectMocks
