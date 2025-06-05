@@ -1,5 +1,6 @@
 package com.wootecam.festivals.domain.queue.service;
 
+import com.wootecam.festivals.domain.queue.dto.PassOrderMessage;
 import com.wootecam.festivals.domain.queue.dto.UpdateWaitOrder;
 import com.wootecam.festivals.domain.queue.repository.RedisWaitOrderListRepository;
 import com.wootecam.festivals.domain.ticket.entity.TicketInfoWithId;
@@ -23,6 +24,7 @@ public class WaitOrderUpdateService {
 
     private final RedisWaitOrderListRepository waitOrderListRepository;
     private final TicketInfoRedisRepository ticketInfoRedisRepository;
+    private final PassOrderEventProducer passOrderEventProducer;
 
     private final TimeProvider timeProvider;
 
@@ -48,6 +50,9 @@ public class WaitOrderUpdateService {
             return;
         }
         waitOrderListRepository.updateWaitOrderListBulk(updateTickets);
+        updateTickets.keySet().stream()
+                .map(ticketId -> new PassOrderMessage(ticketId, updateTickets.get(ticketId).longValue()))
+                .forEach(passOrderEventProducer::send);
         log.info("Updated Wait order.");
     }
 

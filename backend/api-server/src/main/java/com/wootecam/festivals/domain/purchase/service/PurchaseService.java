@@ -5,6 +5,7 @@ import com.wootecam.festivals.domain.member.repository.MemberRepository;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
 import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
+import com.wootecam.festivals.domain.purchase.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.purchase.repository.PurchaseRepository;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.entity.TicketStock;
@@ -39,6 +40,7 @@ public class PurchaseService {
     private final TicketRepository ticketRepository;
     private final UuidProvider uuidProvider;
     private final PurchaseSessionRedisRepository purchaseSessionRedisRepository;
+    private final AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository;
     @Value("${purchase.session.ttl:5}")
     private Long purchaseSessionTtl;
 
@@ -77,6 +79,7 @@ public class PurchaseService {
         Member member = memberRepository.getReferenceById(loginMemberId);
         validFirstTicketPurchase(ticket, member);
         validFirstTicketStockReservation(ticket, member);
+        validAvailablePurchaseMember(ticketId, loginMemberId);
 
         Optional<TicketStock> optionalTicketStock = getTicketStockForUpdate(ticket);
         if (optionalTicketStock.isEmpty() || optionalTicketStock.get().isReserved()) {
@@ -201,6 +204,13 @@ public class PurchaseService {
         if (ticketStockRepository.existsByTicketAndMember(ticket, member.getId())) {
             log.warn("이미 티켓 재고를 예약한 회원입니다. 티켓 ID: {}, 회원 ID: {}", ticket.getId(), member.getId());
             throw new ApiException(TicketErrorCode.ALREADY_RESERVED_TICKET_STOCK);
+        }
+    }
+
+    private void validAvailablePurchaseMember(Long ticketId, Long loginMemberId) {
+        if (!availablePurchaseMemberRedisRepository.isAvailable(ticketId, loginMemberId)) {
+            log.warn("구매 가능한 회원이 아닙니다. 티켓 ID: {}, 회원 ID: {}", ticketId, loginMemberId);
+            throw new ApiException(PurchaseErrorCode.INVALID_PURCHASE_SESSION);
         }
     }
 }

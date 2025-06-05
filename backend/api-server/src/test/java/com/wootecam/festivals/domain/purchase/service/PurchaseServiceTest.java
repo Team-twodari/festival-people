@@ -18,6 +18,7 @@ import com.wootecam.festivals.domain.purchase.dto.PurchasePreviewInfoResponse;
 import com.wootecam.festivals.domain.purchase.entity.Purchase;
 import com.wootecam.festivals.domain.purchase.entity.PurchaseStatus;
 import com.wootecam.festivals.domain.purchase.exception.PurchaseErrorCode;
+import com.wootecam.festivals.domain.purchase.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.purchase.repository.PurchaseRepository;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.entity.TicketStock;
@@ -50,6 +51,7 @@ class PurchaseServiceTest extends SpringBootTestConfig {
     private final PurchaseRepository purchaseRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final PurchaseSessionRedisRepository purchaseSessionRedisRepository;
+    private final AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository;
 
     private LocalDateTime ticketSaleStartTime = LocalDateTime.now();
     private Festival festival;
@@ -62,7 +64,8 @@ class PurchaseServiceTest extends SpringBootTestConfig {
                                PurchaseRepository purchaseRepository, CheckinRepository checkinRepository,
                                TicketStockJdbcRepository ticketStockJdbcRepository,
                                RedisTemplate<String, String> redisTemplate,
-                               PurchaseSessionRedisRepository purchaseSessionRedisRepository) {
+                               PurchaseSessionRedisRepository purchaseSessionRedisRepository,
+                               AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository) {
         this.purchaseService = purchaseService;
         this.memberRepository = memberRepository;
         this.festivalRepository = festivalRepository;
@@ -72,6 +75,7 @@ class PurchaseServiceTest extends SpringBootTestConfig {
         this.ticketStockJdbcRepository = ticketStockJdbcRepository;
         this.redisTemplate = redisTemplate;
         this.purchaseSessionRedisRepository = purchaseSessionRedisRepository;
+        this.availablePurchaseMemberRedisRepository = availablePurchaseMemberRedisRepository;
     }
 
     @BeforeEach
@@ -104,6 +108,7 @@ class PurchaseServiceTest extends SpringBootTestConfig {
                     .festival(festival)
                     .build());
             ticketStockRepository.save(TicketStock.builder().ticket(ticket).build());
+            availablePurchaseMemberRedisRepository.addAvailableMember(ticket.getId(), member.getId(), 2L);
         }
 
         @Test
@@ -145,7 +150,7 @@ class PurchaseServiceTest extends SpringBootTestConfig {
             void It_return_cannot_purchasable_response() {
                 Member newMember = Member.builder().name("newMember").email("email").build();
                 memberRepository.save(newMember);
-
+                availablePurchaseMemberRedisRepository.addAvailableMember(ticket.getId(), newMember.getId(), 2L);
                 PurchasableResponse purchasableResponse = purchaseService.checkPurchasable(ticket.getId(),
                         newMember.getId(), LocalDateTime.now());
 

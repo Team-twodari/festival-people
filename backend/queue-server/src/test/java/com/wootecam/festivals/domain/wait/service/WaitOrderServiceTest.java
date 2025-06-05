@@ -8,8 +8,10 @@ import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository
 import com.wootecam.festivals.domain.ticket.repository.TicketStockCountRedisRepository;
 import com.wootecam.festivals.domain.wait.dto.WaitOrderResponse;
 import com.wootecam.festivals.domain.wait.exception.WaitErrorCode;
+import com.wootecam.festivals.domain.wait.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.PassOrderRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.WaitingRedisRepository;
+import com.wootecam.festivals.domain.wait.session.WaitSessionRegistry;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.utils.SpringBootTestConfig;
 import java.time.LocalDateTime;
@@ -43,6 +45,10 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
     @Autowired
     private CurrentTicketWaitRedisRepository currentTicketWaitRedisRepository;
     @Autowired
+    private WaitSessionRegistry sessionRegistry;
+    @Autowired
+    private AvailablePurchaseMemberRedisRepository availableRepository;
+    @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
     @BeforeEach
@@ -75,8 +81,8 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
 
             // Then: 통과 가능 여부와 대기열 순서를 확인
             assertThat(response.purchasable()).isTrue();
-            assertThat(response.relativeWaitOrder()).isEqualTo(1L); // (6 - 5)
-            assertThat(response.absoluteWaitOrder()).isEqualTo(6L);
+            assertThat(response.relativeWaitOrder()).isEqualTo(0L); // (6 - 5)
+            assertThat(response.absoluteWaitOrder()).isEqualTo(5L);
 
             assertThat(waitingRepository.exists(ticketId, loginMemberId)).isTrue(); // 사용자가 대기열에 추가되었는지 확인
         }
@@ -221,38 +227,34 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
     }
 
     @Nested
-    @DisplayName("updateCurrentPassOrder 메소드는")
-    class Describe_updateCurrentPassOrder {
-        private Long ticketId1 = 1L;
-        private Long ticketId2 = 2L;
+    @DisplayName("removeWaiting 메소드는")
+    class Describe_removeWaiting {
+
 
         @BeforeEach
-        void setUp() {
-            currentTicketWaitRedisRepository.addCurrentTicketWait(ticketId1);
-            currentTicketWaitRedisRepository.addCurrentTicketWait(ticketId2);
-            for (int i = 0; i < 6; ++i) {
-                waitingRepository.addWaiting(ticketId1, (long) i);
-            }
-            for (int i = 0; i < 11; ++i) {
-                waitingRepository.addWaiting(ticketId2, (long) i);
-            }
+        void setUpRemove() {
+            // 대기열과 세션 정보 초기화
+            waitingRepository.addWaiting(ticketId, loginMemberId);
+            sessionRegistry.register("session", ticketId, loginMemberId, 0L);
         }
 
         @Test
-        @DisplayName("현재 진행 중인 티켓팅들의 대기열 범위를 갱신한다")
-        void it_updates_current_pass_order() {
-            // given
-            passOrderRedisRepository.set(ticketId1, 0L);
-            passOrderRedisRepository.set(ticketId2, 5L);
+        @DisplayName("세션 ID와 사용자 정보를 받아 대기열과 세션을 삭제한다")
+        void remove_waiting_with_session() {
+            waitOrderService.removeWaiting("session", ticketId, loginMemberId);
 
-            // when
-            waitOrderService.updateCurrentPassOrder();
+            assertThat(waitingRepository.exists(ticketId, loginMemberId)).isFalse();
+            assertThat(sessionRegistry.get("session")).isNull();
+        }
 
-            // then
-            Long newPassOrder1 = passOrderRedisRepository.get(ticketId1);
-            Long newPassOrder2 = passOrderRedisRepository.get(ticketId2);
-            assertThat(newPassOrder1).isEqualTo(5L);
-            assertThat(newPassOrder2).isEqualTo(10L);
+        @Test
+        @DisplayName("대기 순서를 받아 해당 사용자를 제거하고 구매 가능 유저에 추가한다")
+        void remove_waiting_by_order() {
+            waitOrderService.removeWaiting(ticketId, 0L);
+
+            assertThat(waitingRepository.exists(ticketId, loginMemberId)).isFalse();
+            assertThat(sessionRegistry.get("session")).isNull();
+            assertThat(availableRepository.isAvailable(ticketId, loginMemberId)).isTrue();
         }
     }
 }
