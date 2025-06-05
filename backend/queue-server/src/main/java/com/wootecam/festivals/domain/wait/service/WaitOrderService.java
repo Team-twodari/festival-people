@@ -30,7 +30,6 @@ public class WaitOrderService {
     private final TimeProvider timeProvider;
     private final WaitSessionRegistry sessionRegistry;
     private final AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository;
-    private final WaitSessionRegistry waitSessionRegistry;
     @Value("${wait.queue.ttl-seconds}")
     private Long availablePurchaseMemberTtlSeconds;
 
@@ -165,7 +164,7 @@ public class WaitOrderService {
      * @param passOrder
      */
     public void removeWaiting(Long ticketId, Long passOrder) {
-        List<String> sessionIds = waitSessionRegistry.canPassMembersSessionId(ticketId);
+        List<String> sessionIds = sessionRegistry.canPassMembersSessionId(ticketId);
 
         if (sessionIds.isEmpty()) {
             log.debug("대기열에서 제거할 세션이 없습니다. 티켓 ID: {}, 대기 순서: {}", ticketId, passOrder);
@@ -173,7 +172,7 @@ public class WaitOrderService {
         }
 
         sessionIds.forEach(sessionId -> {
-            SessionInfo sessionInfo = waitSessionRegistry.get(sessionId);
+            SessionInfo sessionInfo = sessionRegistry.get(sessionId);
             if (sessionInfo != null && sessionInfo.order().equals(passOrder)) {
                 removeWaiting(sessionId, ticketId, sessionInfo.memberId());
                 addAvailablePurchaseMember(ticketId, sessionInfo.memberId());
@@ -186,6 +185,7 @@ public class WaitOrderService {
 
     /**
      * 구매 가능한 유저를 추가합니다. 이 메서드는 대기열에서 통과한 사용자를 구매 가능한 유저 목록에 추가합니다.
+     *
      * @param ticketId
      * @param memberId
      */
