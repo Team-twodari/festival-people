@@ -1,20 +1,21 @@
 package com.wootecam.festivals.domain.wait.service;
 
 import com.wootecam.festivals.domain.ticket.entity.TicketInfo;
-import com.wootecam.festivals.domain.ticket.repository.CurrentTicketWaitRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository;
 import com.wootecam.festivals.domain.ticket.repository.TicketStockCountRedisRepository;
 import com.wootecam.festivals.domain.wait.dto.WaitOrderResponse;
 import com.wootecam.festivals.domain.wait.exception.WaitErrorCode;
+import com.wootecam.festivals.domain.wait.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.PassOrderRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.WaitingRedisRepository;
+import com.wootecam.festivals.domain.wait.session.WaitSessionRegistry;
+import com.wootecam.festivals.domain.wait.session.WaitSessionRegistry.SessionInfo;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.global.utils.TimeProvider;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,7 +28,11 @@ public class WaitOrderService {
     private final PassOrderRedisRepository passOrderRedisRepository;
     private final TicketInfoRedisRepository ticketInfoRedisRepository;
     private final TimeProvider timeProvider;
-    private final CurrentTicketWaitRedisRepository currentTicketWaitRedisRepository;
+    private final WaitSessionRegistry sessionRegistry;
+    private final AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository;
+    private final WaitSessionRegistry waitSessionRegistry;
+    @Value("${wait.queue.ttl-seconds}")
+    private Long availablePurchaseMemberTtlSeconds;
 
     @Value("${wait.queue.pass-chunk-size}")
     private Long passChunkSize;
@@ -46,32 +51,31 @@ public class WaitOrderService {
 
         Boolean isWaiting = waitingRepository.exists(ticketId, loginMemberId);
 
-        Long curWaitOrder = waitOrder;
-        validWaitOrderWithWaiter(curWaitOrder, isWaiting);
+        validWaitOrderWithWaiter(waitOrder, isWaiting);
 
         // 대기열 참가 및 대기 순서 발급, 만약 현재 입장 순서 범위라면 대기열 통과
         Long currentPassOrder = getCurrentPassOrder(ticketId);
-        if (!isWaiting && curWaitOrder == null) {
+        if (!isWaiting && waitOrder == null) {
             return getNewWaitOrderForNewUser(ticketId, loginMemberId, currentPassOrder);
         }
 
         validStockRemains(ticketId);
 
         // 대기 순서가 현재 입장 순서 범위에 포함된다면 대기열 통과 가능
-        if (canPass(curWaitOrder, currentPassOrder)) {
+        if (canPass(waitOrder, currentPassOrder)) {
             ticketStockCountRedisRepository.checkAndDecreaseStock(ticketId);
-            log.debug("대기열 통과 - 사용자: {}, 대기 순서: {}", loginMemberId, curWaitOrder);
-            return new WaitOrderResponse(true, curWaitOrder - currentPassOrder, curWaitOrder);
+            log.debug("대기열 통과 - 사용자: {}, 대기 순서: {}", loginMemberId, waitOrder);
+            return new WaitOrderResponse(true, waitOrder - currentPassOrder, waitOrder);
         }
 
         // 대기 순서가 현재 입장 순서 범위의 최소값보다 작거나 같다면, 이탈 유저이므로 새로운 대기 순서 발급
-        if (curWaitOrder <= curMinPassOrder(currentPassOrder)) {
-            log.debug("이탈 유저 새 대기 순서 발급 - 사용자: {}, 대기 순서: {}", loginMemberId, curWaitOrder);
+        if (waitOrder <= curMinPassOrder(currentPassOrder)) {
+            log.debug("이탈 유저 새 대기 순서 발급 - 사용자: {}, 대기 순서: {}", loginMemberId, waitOrder);
             return getNewWaitOrderForExitedUser(ticketId, currentPassOrder);
         }
 
         // 대기가 현재 입장 순서 범위에 포함되지 않는다면 대기열 통과 불가
-        return new WaitOrderResponse(false, curWaitOrder - currentPassOrder, curWaitOrder);
+        return new WaitOrderResponse(false, waitOrder - currentPassOrder, waitOrder);
     }
 
     private WaitOrderResponse getNewWaitOrderForExitedUser(Long ticketId, Long currentPassOrder) {
@@ -134,18 +138,60 @@ public class WaitOrderService {
     }
 
     private Long joinWaitOrder(Long ticketId, Long userId) {
-        waitingRepository.addWaiting(ticketId, userId);
+        if (userId != null) {
+            return waitingRepository.addWaiting(ticketId, userId);
+        }
+
         return waitingRepository.getSize(ticketId);
     }
 
-    @Scheduled(fixedRate = 5000)
-    public void updateCurrentPassOrder() {
-        List<Long> currentTicketWait = currentTicketWaitRedisRepository.getCurrentTicketWait();
+    /**
+     * 대기열에서 사용자를 제거합니다. 이 메서드는 대기열에서 사용자를 제거하고, 해당 사용자의 세션 정보를 세션 레지스트리에서 삭제합니다.
+     *
+     * @param sessionId
+     * @param ticketId
+     * @param userId
+     */
+    public void removeWaiting(String sessionId, Long ticketId, Long userId) {
+        waitingRepository.removeWaiting(ticketId, userId);
+        sessionRegistry.remove(sessionId);
+        log.debug("대기열에서 사용자 제거 - 세션 ID: {}, 티켓 ID: {}, 사용자 ID: {}", sessionId, ticketId, userId);
+    }
 
-        for (Long ticketId : currentTicketWait) {
-            Long waitSize = waitingRepository.getSize(ticketId);
-            Long newPassOrder = passOrderRedisRepository.increase(ticketId, passChunkSize, waitSize);
-            log.debug("대기열 업데이트 - ticketId: {}, 현재 입장 순서: {}", ticketId, newPassOrder);
+    /**
+     * 대기열에서 사용자를 제거합니다. 이 메서드는 대기열에서 사용자를 제거하고, 해당 사용자의 세션 정보를 세션 레지스트리에서 삭제합니다.
+     *
+     * @param ticketId
+     * @param passOrder
+     */
+    public void removeWaiting(Long ticketId, Long passOrder) {
+        List<String> sessionIds = waitSessionRegistry.canPassMembersSessionId(ticketId);
+
+        if (sessionIds.isEmpty()) {
+            log.debug("대기열에서 제거할 세션이 없습니다. 티켓 ID: {}, 대기 순서: {}", ticketId, passOrder);
+            return;
         }
+
+        sessionIds.forEach(sessionId -> {
+            SessionInfo sessionInfo = waitSessionRegistry.get(sessionId);
+            if (sessionInfo != null && sessionInfo.order().equals(passOrder)) {
+                removeWaiting(sessionId, ticketId, sessionInfo.memberId());
+                addAvailablePurchaseMember(ticketId, sessionInfo.memberId());
+            } else {
+                log.debug("대기열에서 제거할 세션 정보가 일치하지 않습니다. 세션 ID: {}, 티켓 ID: {}, 대기 순서: {}", sessionId, ticketId,
+                        passOrder);
+            }
+        });
+    }
+
+    /**
+     * 구매 가능한 유저를 추가합니다. 이 메서드는 대기열에서 통과한 사용자를 구매 가능한 유저 목록에 추가합니다.
+     * @param ticketId
+     * @param memberId
+     */
+    public void addAvailablePurchaseMember(Long ticketId, Long memberId) {
+        availablePurchaseMemberRedisRepository.addAvailableMember(ticketId, memberId,
+                availablePurchaseMemberTtlSeconds);
+        log.info("구매 가능 유저 추가 - 티켓 ID: {}, 사용자 ID: {}", ticketId, memberId);
     }
 }

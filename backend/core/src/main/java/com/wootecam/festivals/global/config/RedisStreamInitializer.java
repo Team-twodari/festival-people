@@ -6,12 +6,13 @@ import static com.wootecam.festivals.domain.payment.constant.PaymentRedisStreamC
 import static com.wootecam.festivals.domain.payment.constant.PaymentRedisStreamConstants.PAYMENT_REQUEST_STREAM_KEY;
 import static com.wootecam.festivals.domain.payment.constant.PaymentRedisStreamConstants.PAYMENT_RESULT_STREAM_GROUP;
 import static com.wootecam.festivals.domain.payment.constant.PaymentRedisStreamConstants.PAYMENT_RESULT_STREAM_KEY;
+import static com.wootecam.festivals.domain.queue.constant.QueueRedisStreamConstants.PASS_ORDER_STREAM_GROUP;
+import static com.wootecam.festivals.domain.queue.constant.QueueRedisStreamConstants.PASS_ORDER_STREAM_KEY;
 import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamConstants.TICKET_STREAM_GROUP;
 import static com.wootecam.festivals.domain.ticket.constant.TicketRedisStreamConstants.TICKET_STREAM_KEY;
 
 import com.wootecam.festivals.global.utils.RedisStreamOperator;
 import jakarta.annotation.PostConstruct;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,6 +38,7 @@ public class RedisStreamInitializer {
                     initializeStream(TICKET_STREAM_KEY, TICKET_STREAM_GROUP);
                     initializeStream(PAYMENT_REQUEST_STREAM_KEY, PAYMENT_REQUEST_STREAM_GROUP);
                     initializeStream(PAYMENT_RESULT_STREAM_KEY, PAYMENT_RESULT_STREAM_GROUP);
+                    initializeStream(PASS_ORDER_STREAM_KEY, PASS_ORDER_STREAM_GROUP);
 
                     redisTemplate.opsForValue().set(initKey, "true"); // 초기화 완료 기록
                 }

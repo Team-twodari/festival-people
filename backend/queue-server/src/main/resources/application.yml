@@ -15,6 +15,7 @@ jwt:
 wait:
   queue:
     pass-chunk-size: 150
+    ttl-seconds: 2  # TTL 값 (2분)
 ---
 spring:
   config:
