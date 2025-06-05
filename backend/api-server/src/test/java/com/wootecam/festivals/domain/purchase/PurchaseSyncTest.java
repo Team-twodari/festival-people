@@ -10,6 +10,7 @@ import com.wootecam.festivals.domain.festival.repository.FestivalRepository;
 import com.wootecam.festivals.domain.member.entity.Member;
 import com.wootecam.festivals.domain.member.repository.MemberRepository;
 import com.wootecam.festivals.domain.purchase.dto.PurchasableResponse;
+import com.wootecam.festivals.domain.purchase.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.purchase.service.PurchaseService;
 import com.wootecam.festivals.domain.ticket.entity.Ticket;
 import com.wootecam.festivals.domain.ticket.entity.TicketStock;
@@ -49,6 +50,8 @@ class PurchaseSyncTest extends SpringBootTestConfig {
     private TicketStockRepository ticketStockRepository;
     @Autowired
     private TicketStockJdbcRepository ticketStockJdbcRepository;
+    @Autowired
+    private AvailablePurchaseMemberRedisRepository availablePurchaseMemberRedisRepository;
 
     @BeforeEach
     void setup() {
@@ -66,6 +69,7 @@ class PurchaseSyncTest extends SpringBootTestConfig {
         Ticket ticket = createTicket(festival, ticketCount);
 
         List<Member> customers = createMembers(customerCount);
+
         ExecutorService executorService = Executors.newFixedThreadPool(customerCount);
         CountDownLatch latch = new CountDownLatch(customerCount);
 
@@ -76,7 +80,7 @@ class PurchaseSyncTest extends SpringBootTestConfig {
         for (Member customer : customers) {
             executorService.submit(() -> {
                 try {
-
+                    availablePurchaseMemberRedisRepository.addAvailableMember(ticket.getId(), customer.getId(), 1L);
                     PurchasableResponse purchasableResponse = purchaseService.checkPurchasable(ticket.getId(),
                             customer.getId(), LocalDateTime.now());
                     if (purchasableResponse.purchasable()) {
