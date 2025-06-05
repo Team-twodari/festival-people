@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@DependsOn(value = {"redisConnectionFactory", "redisStreamInitializer"})
 @RequiredArgsConstructor
 public class PassOrderEventConsumer implements StreamListener<String, ObjectRecord<String, String>>, InitializingBean,
         DisposableBean {
