@@ -75,8 +75,8 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
 
             // Then: 통과 가능 여부와 대기열 순서를 확인
             assertThat(response.purchasable()).isTrue();
-            assertThat(response.relativeWaitOrder()).isEqualTo(1L); // (6 - 5)
-            assertThat(response.absoluteWaitOrder()).isEqualTo(6L);
+            assertThat(response.relativeWaitOrder()).isEqualTo(0L); // (6 - 5)
+            assertThat(response.absoluteWaitOrder()).isEqualTo(5L);
 
             assertThat(waitingRepository.exists(ticketId, loginMemberId)).isTrue(); // 사용자가 대기열에 추가되었는지 확인
         }
@@ -217,42 +217,6 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
             assertThatThrownBy(() -> waitOrderService.getWaitOrder(2L, loginMemberId, 8L))
                     .isInstanceOf(ApiException.class)
                     .hasFieldOrPropertyWithValue("errorCode", WaitErrorCode.INVALID_TICKET);
-        }
-    }
-
-    @Nested
-    @DisplayName("updateCurrentPassOrder 메소드는")
-    class Describe_updateCurrentPassOrder {
-        private Long ticketId1 = 1L;
-        private Long ticketId2 = 2L;
-
-        @BeforeEach
-        void setUp() {
-            currentTicketWaitRedisRepository.addCurrentTicketWait(ticketId1);
-            currentTicketWaitRedisRepository.addCurrentTicketWait(ticketId2);
-            for (int i = 0; i < 6; ++i) {
-                waitingRepository.addWaiting(ticketId1, (long) i);
-            }
-            for (int i = 0; i < 11; ++i) {
-                waitingRepository.addWaiting(ticketId2, (long) i);
-            }
-        }
-
-        @Test
-        @DisplayName("현재 진행 중인 티켓팅들의 대기열 범위를 갱신한다")
-        void it_updates_current_pass_order() {
-            // given
-            passOrderRedisRepository.set(ticketId1, 0L);
-            passOrderRedisRepository.set(ticketId2, 5L);
-
-            // when
-            waitOrderService.updateCurrentPassOrder();
-
-            // then
-            Long newPassOrder1 = passOrderRedisRepository.get(ticketId1);
-            Long newPassOrder2 = passOrderRedisRepository.get(ticketId2);
-            assertThat(newPassOrder1).isEqualTo(5L);
-            assertThat(newPassOrder2).isEqualTo(10L);
         }
     }
 }

@@ -8,6 +8,7 @@ spring:
 wait:
   queue:
     pass-chunk-size: 4
+    ttl-seconds: 2
 
 jwt:
   secret: "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest"
