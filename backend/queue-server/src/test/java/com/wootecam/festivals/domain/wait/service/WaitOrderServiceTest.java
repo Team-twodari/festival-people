@@ -8,8 +8,10 @@ import com.wootecam.festivals.domain.ticket.repository.TicketInfoRedisRepository
 import com.wootecam.festivals.domain.ticket.repository.TicketStockCountRedisRepository;
 import com.wootecam.festivals.domain.wait.dto.WaitOrderResponse;
 import com.wootecam.festivals.domain.wait.exception.WaitErrorCode;
+import com.wootecam.festivals.domain.wait.repository.AvailablePurchaseMemberRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.PassOrderRedisRepository;
 import com.wootecam.festivals.domain.wait.repository.WaitingRedisRepository;
+import com.wootecam.festivals.domain.wait.session.WaitSessionRegistry;
 import com.wootecam.festivals.global.exception.type.ApiException;
 import com.wootecam.festivals.utils.SpringBootTestConfig;
 import java.time.LocalDateTime;
@@ -42,6 +44,10 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
     private PassOrderRedisRepository passOrderRedisRepository;
     @Autowired
     private CurrentTicketWaitRedisRepository currentTicketWaitRedisRepository;
+    @Autowired
+    private WaitSessionRegistry sessionRegistry;
+    @Autowired
+    private AvailablePurchaseMemberRedisRepository availableRepository;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
@@ -217,6 +223,38 @@ class WaitOrderServiceTest extends SpringBootTestConfig {
             assertThatThrownBy(() -> waitOrderService.getWaitOrder(2L, loginMemberId, 8L))
                     .isInstanceOf(ApiException.class)
                     .hasFieldOrPropertyWithValue("errorCode", WaitErrorCode.INVALID_TICKET);
+        }
+    }
+
+    @Nested
+    @DisplayName("removeWaiting 메소드는")
+    class Describe_removeWaiting {
+
+
+        @BeforeEach
+        void setUpRemove() {
+            // 대기열과 세션 정보 초기화
+            waitingRepository.addWaiting(ticketId, loginMemberId);
+            sessionRegistry.register("session", ticketId, loginMemberId, 0L);
+        }
+
+        @Test
+        @DisplayName("세션 ID와 사용자 정보를 받아 대기열과 세션을 삭제한다")
+        void remove_waiting_with_session() {
+            waitOrderService.removeWaiting("session", ticketId, loginMemberId);
+
+            assertThat(waitingRepository.exists(ticketId, loginMemberId)).isFalse();
+            assertThat(sessionRegistry.get("session")).isNull();
+        }
+
+        @Test
+        @DisplayName("대기 순서를 받아 해당 사용자를 제거하고 구매 가능 유저에 추가한다")
+        void remove_waiting_by_order() {
+            waitOrderService.removeWaiting(ticketId, 0L);
+
+            assertThat(waitingRepository.exists(ticketId, loginMemberId)).isFalse();
+            assertThat(sessionRegistry.get("session")).isNull();
+            assertThat(availableRepository.isAvailable(ticketId, loginMemberId)).isTrue();
         }
     }
 }
